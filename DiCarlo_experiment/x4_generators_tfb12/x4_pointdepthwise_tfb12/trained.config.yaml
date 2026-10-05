@@ -1,0 +1,1059 @@
+accelerator: auto
+accumulate_grad_batches: 16
+activityloss: '0.0002'
+automatic_optimization: true
+batch_size: 48
+batches_ahead: 3
+benchmark: true
+cache_size: 1000
+cached_model_kwargs: {}
+category:
+- activityloss
+- tsteps
+- lossrt
+- tsk
+- skip
+- rctype
+- rctarget
+check_val_every_n_epoch: 1
+checkpoint_dir: /scratch/tw2838/DynVision_Working/models/DyRCNNx4/DyRCNNx4:tsteps=20+dt=2+tau=9+tff=0+trc=6+tfb=12+tsk=0+lossrt=8+activityloss=0.0002+pattern=1+rctype=pointdepthwise+rctarget=output+skip=true+feedback=add_7000/imagenette
+checkpoint_mode: min
+chunksize: 1000
+class_index_files:
+    imagenet: imagenet_class_index.json
+    imagenette: imagenet_class_index.json
+    tinyimagenet: tinyimagenet_class_index.json
+classifier_name: classifier
+clip_gradients: false
+compress_probability: 0.25
+cuda_available: true
+cuda_version: '12.9'
+data_group: all
+data_groups:
+    cifar100:
+        alphabet:
+        - 0
+        - 8
+        - 18
+        - 29
+        - 31
+        - 33
+        - 35
+        - 37
+        - 38
+        - 44
+        - 51
+        - 53
+        - 63
+        - 69
+        - 82
+        invertebrates:
+        - 6
+        - 7
+        - 14
+        - 18
+        - 24
+        - 26
+        - 45
+        - 77
+        - 79
+        - 99
+    imagenet:
+        imagenette:
+        - 0
+        - 217
+        - 482
+        - 491
+        - 497
+        - 566
+        - 569
+        - 571
+        - 574
+        - 701
+        insects:
+        - 304
+        - 310
+        - 311
+        - 312
+        - 313
+        - 314
+        - 315
+        - 316
+        - 317
+        - 318
+        - 319
+        one:
+        - 0
+        snakes:
+        - 54
+        - 60
+        - 62
+        - 66
+        - 67
+        - 68
+    imagenette:
+        one:
+        - 0
+    mnist:
+        '01':
+        - 0
+        - 1
+        '38':
+        - 3
+        - 8
+        '89':
+        - 8
+        - 9
+    snakenet:
+        cool:
+        - 1
+        - 2
+        - 4
+    tinyimagenet:
+        catdogs:
+        - 187
+        - 207
+        - 208
+        - 235
+        - 267
+        - 281
+        - 283
+        - 285
+        - 286
+        - 291
+        mollusks:
+        - 13
+        - 14
+        - 15
+        - 16
+        - 17
+        - 18
+        - 19
+        - 46
+data_name: imagenette
+data_resolution:
+    cifar10: 32
+    cifar100: 32
+    imagenet: 224
+    imagenette: 224
+    mnist: 28
+    snakenet: 224
+    tinyimagenet: 64
+data_statistics:
+    cifar10:
+        mean:
+        - 0.5071
+        - 0.4867
+        - 0.4408
+        std:
+        - 0.2675
+        - 0.2565
+        - 0.2761
+    cifar100:
+        mean:
+        - 0.5071
+        - 0.4867
+        - 0.4408
+        std:
+        - 0.2675
+        - 0.2565
+        - 0.2761
+    imagenet:
+        mean:
+        - 0.485
+        - 0.456
+        - 0.406
+        std:
+        - 0.229
+        - 0.224
+        - 0.225
+    imagenette:
+        mean:
+        - 0.485
+        - 0.456
+        - 0.406
+        std:
+        - 0.229
+        - 0.224
+        - 0.225
+    mnist:
+        mean:
+        - 0.1307
+        std:
+        - 0.3081
+    tinyimagenet:
+        mean:
+        - 0.485
+        - 0.456
+        - 0.406
+        std:
+        - 0.229
+        - 0.224
+        - 0.225
+data_timesteps: 1
+dataloader_kwargs: {}
+dataset_link: /scratch/tw2838/data/interim/imagenette/train_all
+debug_mode:
+    accumulate_grad_batches: 1
+    batch_size: 3
+    check_val_every_n_epoch: 1
+    enable_progress_bar: true
+    log_every_n_steps: 1
+deterministic: false
+devices: 1
+distributed_mode:
+    accelerator: gpu
+    accumulate_grad_batches: 2
+    check_val_every_n_epoch: 100
+    chunksize: 5000
+    devices: 4
+    drop_last: true
+    monitor_checkpoint: train_loss
+    num_nodes: 1
+    num_sanity_val_steps: 0
+    num_workers: 8
+    order: QUASI_RANDOM
+    os_cache: true
+    persistent_workers: true
+    pin_memory: false
+    precision: bf16-mixed
+    store_train_responses: 0
+    store_val_responses: 0
+    strategy: ddp
+    strategy_kwargs:
+        find_unused_parameters: false
+        gradient_as_bucket_view: true
+        process_group_backend: nccl
+        static_graph: false
+    sync_batchnorm: true
+    train:
+        data:
+            batch_size: 512
+            use_ffcv: true
+    use_distributed: false
+drop_last: true
+dt: 2.0
+early_stopping_min_delta: 0.0
+early_stopping_mode: min
+early_stopping_monitor: val_loss
+early_test_stop: true
+effective_batch_size: 768
+effective_learning_rate: 0.0024
+enable_progress_bar: true
+encoding: image
+epochs: 200
+every_n_epochs: 50
+experiment:
+- uniformnoise
+- uniformnoiseffonly
+- contrast
+- duration
+- interval
+- response
+experiment_config:
+    categories:
+        activityloss:
+        - '0'
+        - '0.0002'
+        - '0.02'
+        - '0.2'
+        - '1.0'
+        dloader:
+        - ffcv
+        - torch
+        dsteps:
+        - 1
+        - 20
+        dt:
+        - 2
+        feedback:
+        - 'false'
+        - add
+        - mul
+        ffonly:
+        - 'true'
+        - 'false'
+        idle:
+        - 0
+        - 1
+        - 5
+        - 10
+        - 20
+        lossrt:
+        - 0
+        - 4
+        - 8
+        - 18
+        - 28
+        pattern:
+        - '1'
+        - '1011'
+        - '1001'
+        - '1000'
+        pretrained:
+        - 'true'
+        rctarget:
+        - output
+        - input
+        - middle
+        rctype:
+        - depthpointwise
+        - pointdepthwise
+        - self
+        - full
+        - local
+        - localdepthwise
+        - none
+        skip:
+        - 'true'
+        - 'false'
+        tau:
+        - 3
+        - 5
+        - 9
+        tff:
+        - 0
+        - 10
+        trc:
+        - 2
+        - 6
+        - 10
+        tsk:
+        - 0
+        - 4
+        - 8
+        tsteps:
+        - 4
+        - 8
+        - 14
+        - 20
+        - 26
+    contrast:
+        data_args:
+            contrast:
+            - 0.1
+            - 0.2
+            - 0.3
+            - 0.4
+            - 0.6
+            - 0.8
+            - 1.0
+            dsteps: 30
+            idle: 20
+            intro: 1
+            stim: 20
+        data_loader: StimulusContrast
+        parameter: contrast
+    duration:
+        data_args:
+            dsteps: 30
+            idle: 20
+            intro: 1
+            stim:
+            - 1
+            - 2
+            - 3
+            - 4
+            - 5
+            - 10
+            - 15
+            - 20
+        data_loader: StimulusDuration
+        parameter: stim
+    gaussiancorrnoise:
+        data_args:
+            dsteps: 20
+            idle: 20
+            noisetype: gaussian
+            spatialcorr: 'true'
+            ssnr:
+            - 0.0
+            - 0.1
+            - 0.2
+            - 0.3
+            - 0.4
+            - 0.5
+            - 0.6
+            - 0.7
+            - 0.8
+            - 0.9
+            - 1.0
+            tempmode: dynamic
+        data_loader: StimulusNoise
+        parameter: ssnr
+    gaussiancorrnoiseffonly:
+        data_args:
+            dsteps: 20
+            ffonly: 'true'
+            idle: 20
+            noisetype: gaussian
+            spatialcorr: 'true'
+            ssnr:
+            - 0.0
+            - 0.1
+            - 0.2
+            - 0.3
+            - 0.4
+            - 0.5
+            - 0.6
+            - 0.7
+            - 0.8
+            - 0.9
+            - 1.0
+            tempmode: dynamic
+        data_loader: StimulusNoise
+        parameter: ssnr
+    gaussiannoise:
+        data_args:
+            dsteps: 20
+            idle: 20
+            noisetype: gaussian
+            ssnr:
+            - 0.0
+            - 0.1
+            - 0.2
+            - 0.3
+            - 0.4
+            - 0.5
+            - 0.6
+            - 0.7
+            - 0.8
+            - 0.9
+            - 1.0
+            tempmode: dynamic
+        data_loader: StimulusNoise
+        parameter: ssnr
+    gaussiannoiseffonly:
+        data_args:
+            dsteps: 20
+            ffonly: 'true'
+            idle: 20
+            noisetype: gaussian
+            ssnr:
+            - 0.0
+            - 0.1
+            - 0.2
+            - 0.3
+            - 0.4
+            - 0.5
+            - 0.6
+            - 0.7
+            - 0.8
+            - 0.9
+            - 1.0
+            tempmode: dynamic
+        data_loader: StimulusNoise
+        parameter: ssnr
+    hundred:
+        data_args:
+            dsteps: 200
+            idle: 100
+            intro: 0
+            stim: 100
+        data_loader: StimulusDuration
+        parameter: stim
+    idleresponse:
+        data_args:
+            dsteps: 30
+            idle:
+            - 0
+            - 1
+            - 5
+            - 10
+            - 20
+            - 40
+            intro: 5
+            stim: 15
+        data_loader: StimulusDuration
+        parameter: idle
+    interval:
+        data_args:
+            dsteps: 40
+            idle: 20
+            interval:
+            - 1
+            - 2
+            - 3
+            - 4
+            - 6
+            - 8
+            - 10
+            intro: 1
+            stim: 5
+        data_loader: StimulusInterval
+        parameter: interval
+    noise:
+        parameter: ssnr
+    nullcondition:
+        data_args:
+            dsteps: 200
+            intro: 95
+            stim: 10
+        data_loader: StimulusDuration
+        parameter: stim
+    phasescramblednoise:
+        data_args:
+            dsteps: 20
+            idle: 20
+            noisetype: phasescrambled
+            ssnr:
+            - 0.0
+            - 0.2
+            - 0.4
+            - 0.6
+            - 0.8
+            - 1.0
+            tempmode: dynamic
+        data_loader: StimulusNoise
+        parameter: ssnr
+    phasescramblednoiseffonly:
+        data_args:
+            dsteps: 20
+            ffonly: 'true'
+            idle: 20
+            noisetype: phasescrambled
+            ssnr:
+            - 0.0
+            - 0.2
+            - 0.4
+            - 0.6
+            - 0.8
+            - 1.0
+            tempmode: dynamic
+        data_loader: StimulusNoise
+        parameter: ssnr
+    poissonnoise:
+        data_args:
+            dsteps: 20
+            idle: 20
+            noisetype: poisson
+            ssnr:
+            - 0.2
+            - 0.4
+            - 0.6
+            - 0.8
+            - 1.0
+            tempmode: dynamic
+        data_loader: StimulusNoise
+        parameter: ssnr
+    poissonnoiseffonly:
+        data_args:
+            dsteps: 20
+            ffonly: 'true'
+            idle: 20
+            noisetype: poisson
+            ssnr:
+            - 0.0
+            - 0.2
+            - 0.4
+            - 0.6
+            - 0.8
+            - 1.0
+            tempmode: dynamic
+        data_loader: StimulusNoise
+        parameter: ssnr
+    response:
+        data_args:
+            dsteps: 60
+            idle: 20
+            intro: 1
+            stim: 30
+        data_loader: StimulusDuration
+        parameter: stim
+    responseffonly:
+        data_args:
+            dsteps: 4
+            ffonly:
+            - 'true'
+            - 'false'
+            intro: 0
+            stim: 2
+        data_loader: StimulusDuration
+        parameter: ffonly
+    responseintermediate:
+        data_args:
+            dsteps: 60
+            idle: 20
+            intro: 1
+            stim: 30
+        data_loader: StimulusDuration
+        parameter: stim
+        status:
+        - trained-epoch=49
+        - trained-epoch=99
+        - trained-epoch=149
+        - trained-epoch=199
+        - trained-epoch=249
+        - trained-epoch=299
+    saltpeppernoise:
+        data_args:
+            dsteps: 20
+            idle: 20
+            noisetype: saltpepper
+            ssnr:
+            - 0.2
+            - 0.4
+            - 0.6
+            - 0.8
+            - 1.0
+            tempmode: dynamic
+        data_loader: StimulusNoise
+        parameter: noiselevel
+    stability:
+        data_args:
+            dsteps: 125
+            idle: 20
+            intro: 0
+            stim:
+            - 25
+            - 100
+        data_loader: StimulusDuration
+        parameter: stim
+    stabilityintermediate:
+        data_args:
+            dsteps: 125
+            idle: 20
+            intro: 1
+            stim: 100
+        data_loader: StimulusDuration
+        parameter: stim
+        status:
+        - trained-epoch=199
+        - trained-epoch=249
+        - trained-epoch=299
+        - trained-epoch=349
+    ten:
+        data_args:
+            dsteps: 10
+            idle: 0
+            intro: 0
+            stim: 5
+        data_loader: StimulusDuration
+        parameter: stim
+    uniformnoise:
+        data_args:
+            dsteps: 20
+            idle: 20
+            noisetype: uniform
+            ssnr:
+            - 0.2
+            - 0.4
+            - 0.6
+            - 0.8
+            - 1.0
+            tempmode: dynamic
+        data_loader: StimulusNoise
+        parameter: ssnr
+    uniformnoiseffonly:
+        data_args:
+            dsteps: 20
+            ffonly: 'true'
+            idle: 20
+            noisetype: uniform
+            ssnr:
+            - 0.2
+            - 0.4
+            - 0.6
+            - 0.8
+            - 1.0
+            tempmode: dynamic
+        data_loader: StimulusNoise
+        parameter: ssnr
+feedback: add
+global_batch_size: 48
+gradient_clip_algorithm: norm
+gradient_clip_val: 1.0
+init:
+    data:
+        num_workers: 0
+        pin_memory: false
+        use_distributed: false
+        use_ffcv: false
+    model:
+        store_responses: 0
+init_with_pretrained: false
+input_dims:
+- 1
+- 3
+- 224
+- 224
+input_model_state: /scratch/tw2838/DynVision_Working/models/DyRCNNx4/DyRCNNx4:tsteps=20+dt=2+tau=9+tff=0+trc=6+tfb=12+tsk=0+lossrt=8+activityloss=0.0002+pattern=1+rctype=pointdepthwise+rctarget=output+skip=true+feedback=add_7000/imagenette/init.pt
+jpeg_quality: 60
+large_dataset_mode:
+    chunksize: 5000
+    num_workers: 4
+    order: QUASI_RANDOM
+    os_cache: false
+    persistent_workers: false
+    pin_memory: false
+    precision: bf16-mixed
+    use_ffcv: true
+learning_rate: 0.0006928203230275509
+lightning_version: 2.6.5
+limit_val_batches: 1.0
+local_mode:
+    enable_progress_bar: true
+    num_workers: 0
+    persistent_workers: false
+    use_ffcv: false
+    verbose: true
+log_every_n_steps: 20
+log_level: INFO
+logger: false
+loss:
+- CrossEntropyLoss
+- ActivityLoss
+loss_configs:
+    ActivityLoss:
+        ord: 1
+        weight: 0.0002
+    CrossEntropyLoss:
+        ignore_index: -1
+loss_reaction_time: 0.0
+lossrt: '8'
+lr_parameter_groups:
+    feedback:
+        amsgrad: false
+        betas:
+        - 0.9
+        - 0.999
+        capturable: false
+        decoupled_weight_decay: false
+        differentiable: false
+        eps: 1.0e-08
+        fused: false
+        initial_lr: 0.00034641016151377546
+        lr: 0.0002267283942228511
+        maximize: false
+        name: feedback
+        params: []
+        weight_decay: 0.0005
+    recurrence:
+        amsgrad: false
+        betas:
+        - 0.9
+        - 0.999
+        capturable: false
+        decoupled_weight_decay: false
+        differentiable: false
+        eps: 1.0e-08
+        fused: false
+        initial_lr: 0.0001385640646055102
+        lr: 9.069135768914041e-05
+        maximize: false
+        name: recurrence
+        params: []
+        weight_decay: 0.0005
+    regular:
+        amsgrad: false
+        betas:
+        - 0.9
+        - 0.999
+        capturable: false
+        decoupled_weight_decay: false
+        differentiable: false
+        eps: 1.0e-08
+        fused: false
+        initial_lr: 0.0006928203230275509
+        lr: 0.0004534567884457022
+        maximize: false
+        name: regular
+        params: []
+        weight_decay: 0.0005
+lr_scaling:
+    enabled: true
+    ref_batch_size: 64
+    threshold_factor: 8
+max_resolution: 224
+model_args:
+    activityloss: 0.0002
+    dt: 2
+    feedback: 'false'
+    lossrt: 4
+    pattern: '1'
+    rctarget: output
+    rctype: full
+    skip: 'true'
+    tau: 5
+    tff: 0
+    trc: 6
+    tsk: 0
+    tsteps: 20
+model_kwargs: {}
+model_name: DyRCNNx4
+monitor_checkpoint: val_loss
+mounted_datasets:
+- imagenet
+n_classes: 10
+n_timesteps: 20
+naming:
+    'False': 'False'
+    'True': 'True'
+    accuracy: Accuracy
+    activityloss: Activity Loss Weight
+    add: Additive
+    addfeedback_V1: Feedback V1<-V4
+    addfeedback_V2: Feedback V2<-IT
+    addskip_IT: Skip V1->IT
+    addskip_V4: Skip V1->V4
+    confidence: Confidence
+    contrast: $C$
+    contrast_experiment: Stimulus Contrast
+    duration: $D$
+    duration_experiment: Stimulus Duration
+    feedback: Feedback
+    feedforward: Feedforward
+    ffonly: Feedforward Only
+    gaussiancorrnoise_experiment: Correlated Gaussian Noise
+    gaussiannoise_experiment: Gaussian Noise
+    idle: $t_{idle}$
+    interval: $I$
+    interval_experiment: Stimulus Interval
+    layer: Layer
+    layer1: V1
+    layer2: V2
+    layer3: V4
+    layer4: IT
+    lossrt: $t_{loss}$
+    mul: Multiplicative
+    nan: None
+    noise: $\sigma$
+    noiselevel: $\sigma$
+    none: None
+    nullcondition_experiment: Null Condition
+    pattern: Presentation Pattern
+    peak_height: Peak Height
+    peak_ratio: Peak Ratio
+    peak_time: Peak Time
+    phasescramblednoise_experiment: Phase-scrambled Noise
+    poissonnoise_experiment: Poisson Noise
+    power: Power
+    rctarget: Recurrence Target
+    rctype: Recurrence Type
+    recurrence: Recurrent
+    response_experiment: Response
+    responseffonly_experiment: Feedforward Only
+    responseintermediate_experiment: Intermediate Responses
+    saltpeppernoise_experiment: Salt & Pepper
+    seed: Seed
+    skip: Skip
+    ssnr: SSNR
+    stability_experiment: Stability
+    status: Status
+    stim: $D$
+    stimulus: $D$
+    tau: $\tau$
+    trained: Trained
+    trc: $\Delta_{RC}$
+    tsk: $\Delta_{SK}$
+    tsteps: $T$
+    uniformnoise_experiment: Uniform Noise
+non_input_value: 0
+non_label_index: -1
+normalize:
+-   - 0.485
+    - 0.456
+    - 0.406
+-   - 0.229
+    - 0.224
+    - 0.225
+num_nodes: 1
+num_sanity_val_steps: 0
+num_workers: 4
+optimizer: Adam
+optimizer_configs:
+    monitor: val_loss
+optimizer_kwargs:
+    fused: false
+    weight_decay: 0.0005
+ordering:
+    connection_type:
+    - feedforward
+    - recurrence
+    feedback:
+    - 'false'
+    - add
+    - mul
+    layers:
+    - Skip V2->IT
+    - Skip V1->V4
+    - Feedback V2<-IT
+    - Feedback V1<-V4
+    - IT
+    - V4
+    - V2
+    - V1
+    - layer8
+    - layer7
+    - layer6
+    - layer5
+    - layer4
+    - layer3
+    - layer2
+    - layer1
+    rctarget:
+    - input
+    - middle
+    - output
+    - 'null'
+    rctype:
+    - full
+    - self
+    - depthpointwise
+    - pointdepthwise
+    - local
+    - localdepthwise
+    - none
+    status:
+    - trained
+os_cache: true
+output_model_state: /scratch/tw2838/DynVision_Working/models/DyRCNNx4/DyRCNNx4:tsteps=20+dt=2+tau=9+tff=0+trc=6+tfb=12+tsk=0+lossrt=8+activityloss=0.0002+pattern=1+rctype=pointdepthwise+rctarget=output+skip=true+feedback=add_7000/imagenette/trained.pt
+page_size: 4194304
+palette:
+    CorNetRT: '#C88B4Aff'
+    CordsNet: '#9B59B6ff'
+    DyRCNNx8: '#c0c0c0ff'
+    IT: '#ba55d3ff'
+    V1: '#ff69b4ff'
+    V2: '#dda0ddff'
+    V4: '#da70d6ff'
+    accent: '#EC4899'
+    classifier: '#808080ff'
+    depthpointwise: '#1E3A8A'
+    feedforward: '#D4A373'
+    full: '#B8860B'
+    input: '#6BAA75'
+    local: '#E91E63'
+    localdepthwise: '#FF6347'
+    middle: '#E9C46A'
+    nan: '#808080'
+    none: '#808080'
+    output: '#C0533A'
+    pointdepthwise: '#3B82F6'
+    recurrence: '#9B59B6'
+    self: '#2E8B57'
+pattern: '1'
+persistent_workers: true
+pin_memory: false
+pixel_range: 0-1
+precision: bf16-mixed
+prefetch_factor: 1
+rctarget: output
+recurrence_type: pointdepthwise
+reload_dataloaders_every_n_epochs: 0
+resolution: 224
+response_resolution: layer
+retain_graph: false
+save_last: true
+save_top_k: 2
+scheduler: CosineAnnealingLR
+scheduler_configs:
+    frequency: 1
+    interval: epoch
+    monitor: train_loss
+    name: lr_scheduled
+scheduler_kwargs:
+    T_max: 500
+seed: 7000
+shuffle: true
+skip: true
+status:
+- trained-best
+store_responses: 0
+store_responses_on_cpu: true
+store_test_responses: 12
+store_train_responses: 0
+store_val_responses: 0
+strategy_kwargs: {}
+target_data_group: all
+target_data_name: imagenette
+target_dtype: float16
+tau: 9.0
+test:
+    data:
+        batch_size: 32
+        drop_last: true
+        num_workers: 4
+        pin_memory: true
+        sampler: RoundRobinSampler
+        shuffle: false
+        train: false
+        use_distributed: false
+        use_ffcv: false
+    model:
+        store_responses_on_cpu: true
+    trainer:
+        accelerator: auto
+        devices: 1
+        enable_checkpointing: false
+        enable_progress_bar: true
+        num_nodes: 1
+        strategy: auto
+    verbose: true
+test_batch_size: 32
+tfb: '12'
+tff: '0'
+timestamp: '2026-08-26T03:47:27.024676'
+torch_version: !!python/object/new:torch.torch_version.TorchVersion
+- 2.13.0+cu129
+train: true
+train_ratio: 0.9
+transform_backend: torch
+transform_context: train
+transform_preset: imagenette
+transform_presets:
+    ffcv:
+        test:
+            base: []
+        train:
+            base:
+            - RandomHorizontalFlip()
+            - RandomBrightness(0.2)
+            - RandomContrast(0.2)
+            - RandomSaturation(0.2)
+            - RandomTranslate(padding=22, fill=(0, 0, 0))
+            mnist:
+            - RandomBrightness(0.2)
+            - RandomContrast(0.2)
+            - RandomSaturation(0.2)
+    torch:
+        test:
+            base: []
+            imagenet:
+            - Resize(256)
+            - CenterCrop(224)
+            imagenette:
+            - Resize(256)
+            - CenterCrop(224)
+        train:
+            base:
+            - RandomRotation(10)
+            - RandomAffine(0, translate=(0.1, 0.1))
+            - RandomHorizontalFlip()
+            - ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2)
+            ffcv-build: []
+            imagenet:
+            - Resize(256)
+            - CenterCrop(224)
+            - RandomRotation(10)
+            - RandomAffine(0, translate=(0.1, 0.1))
+            - RandomHorizontalFlip()
+            - ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2)
+            imagenette:
+            - Resize(256)
+            - CenterCrop(224)
+            - RandomRotation(10)
+            - RandomAffine(0, translate=(0.1, 0.1))
+            - RandomHorizontalFlip()
+            - ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2)
+            mnist:
+            - RandomRotation(10)
+            - RandomAffine(0, translate=(0.1, 0.1))
+            - Grayscale(num_output_channels=1)
+trc: '6'
+tsk: '0'
+use_distributed: false
+use_ffcv: false
+verbose: true
+world_size: 1
+writer_mode: proportion

@@ -1,0 +1,1223 @@
+# DynVision resolved configuration
+# Generated At: 2026-08-25T16:14:06.474524
+# Script: /home/tw2838/DynVision/dynvision/runtime/init_model.py
+# Primary Output: /scratch/tw2838/DynVision_Working/models/DyRCNNx4/DyRCNNx4:tsteps=20+dt=2+tau=9+tff=0+trc=6+tfb=12+tsk=0+lossrt=8+activityloss=0.0002+pattern=1+rctype=depthpointwise+rctarget=output+skip=true+feedback=add_7000/imagenette/init.pt
+# Source Precedence: config -> modes -> cli
+# Active Modes: none
+# Mode Toggles: {'local': 'auto', 'debug': False, 'large_dataset': False, 'distributed': False}
+
+seed: 7000
+log_level: info
+model.seed: 7000
+model.log_level: INFO
+model.model_name: DyRCNNx4
+model.n_classes: 10
+model.input_dims:
+- 1
+- 3
+- 224
+- 224
+model.n_timesteps: 20
+model.data_presentation_pattern: null
+model.input_adaption_weight: null
+model.dt: 2.0
+model.tau: 9.0
+model.t_feedforward: null
+model.t_recurrence: null
+model.t_feedback: null
+model.t_skip: null
+model.dynamics_solver: null
+model.idle_timesteps: null
+model.feedforward_only: null
+model.truncated_bptt_timesteps: null
+model.recurrence_type: depthpointwise
+model.skip: true
+model.feedback: add
+model.supralinearity: null
+model.store_responses: 0
+model.store_responses_on_cpu: true
+model.classifier_name: classifier
+model.store_train_responses: 0
+model.store_val_responses: 0
+model.store_test_responses: 12
+model.store_train_records: null
+model.store_val_records: null
+model.store_test_records: null
+model.early_test_stop: true
+model.response_resolution: layer
+model.loss:
+- CrossEntropyLoss
+- ActivityLoss
+model.loss_configs:
+  CrossEntropyLoss:
+    weight: 1
+    ignore_index: -1
+  ActivityLoss:
+    weight: 0.0002
+    ord: 1
+model.loss_reaction_time: 0.0
+model.learning_rate: 0.0002
+model.optimizer: Adam
+model.optimizer_kwargs:
+  weight_decay: 0.0005
+  fused: false
+model.optimizer_configs:
+  monitor: val_loss
+model.target_dtype: float16
+model.lr_parameter_groups:
+  regular:
+    lr_factor: 1.0
+  recurrence:
+    lr_factor: 0.2
+  feedback:
+    lr_factor: 0.5
+model.scheduler: CosineAnnealingLR
+model.scheduler_kwargs:
+  T_max: 500
+model.scheduler_configs:
+  interval: epoch
+  frequency: 1
+  monitor: train_loss
+  name: lr_scheduled
+model.retain_graph: false
+model.non_label_index: -1
+model.model_kwargs: {}
+model.cached_model_kwargs: {}
+model.dataset_path: /scratch/tw2838/data/interim/imagenette/train_all
+model.output: /scratch/tw2838/DynVision_Working/models/DyRCNNx4/DyRCNNx4:tsteps=20+dt=2+tau=9+tff=0+trc=6+tfb=12+tsk=0+lossrt=8+activityloss=0.0002+pattern=1+rctype=depthpointwise+rctarget=output+skip=true+feedback=add_7000/imagenette/init.pt
+model.status:
+- trained-best
+model.test:
+  verbose: true
+  model:
+    store_responses_on_cpu: true
+  data:
+    train: false
+    shuffle: false
+    sampler: RoundRobinSampler
+    use_distributed: false
+    use_ffcv: false
+    pin_memory: true
+    drop_last: true
+    prefetch_factor: null
+    num_workers: 4
+    batch_size: 32
+  trainer:
+    devices: 1
+    num_nodes: 1
+    strategy: auto
+    accelerator: auto
+    logger: null
+    enable_checkpointing: false
+    enable_progress_bar: true
+model.epochs: 200
+model.check_val_every_n_epoch: 1
+model.log_every_n_steps: 20
+model.accumulate_grad_batches: 16
+model.num_sanity_val_steps: 0
+model.profiler: null
+model.benchmark: true
+model.enable_progress_bar: true
+model.limit_val_batches: 1.0
+model.reload_dataloaders_every_n_epochs: 0
+model.automatic_optimization: true
+model.clip_gradients: false
+model.gradient_clip_algorithm: norm
+model.gradient_clip_val: 1.0
+model.deterministic: false
+model.devices: 1
+model.num_nodes: 1
+model.accelerator: auto
+model.strategy_kwargs: {}
+model.early_stopping_min_delta: 0.0
+model.early_stopping_monitor: val_loss
+model.early_stopping_mode: min
+model.save_top_k: 2
+model.monitor_checkpoint: val_loss
+model.checkpoint_mode: min
+model.save_last: true
+model.every_n_epochs: 50
+model.test_batch_size: 32
+model.logger: false
+model.verbose: true
+model.lr_scaling:
+  enabled: true
+  ref_batch_size: 64
+  threshold_factor: 8
+model.mounted_datasets:
+- imagenet
+model.transform_presets:
+  torch:
+    train:
+      base:
+      - RandomRotation(10)
+      - RandomAffine(0, translate=(0.1, 0.1))
+      - RandomHorizontalFlip()
+      - ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2)
+      ffcv-build: []
+      mnist:
+      - RandomRotation(10)
+      - RandomAffine(0, translate=(0.1, 0.1))
+      - Grayscale(num_output_channels=1)
+      imagenet:
+      - Resize(256)
+      - CenterCrop(224)
+      - RandomRotation(10)
+      - RandomAffine(0, translate=(0.1, 0.1))
+      - RandomHorizontalFlip()
+      - ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2)
+      imagenette:
+      - Resize(256)
+      - CenterCrop(224)
+      - RandomRotation(10)
+      - RandomAffine(0, translate=(0.1, 0.1))
+      - RandomHorizontalFlip()
+      - ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2)
+    test:
+      base: []
+      imagenet:
+      - Resize(256)
+      - CenterCrop(224)
+      imagenette:
+      - Resize(256)
+      - CenterCrop(224)
+  ffcv:
+    train:
+      base:
+      - RandomHorizontalFlip()
+      - RandomBrightness(0.2)
+      - RandomContrast(0.2)
+      - RandomSaturation(0.2)
+      - RandomTranslate(padding=22, fill=(0, 0, 0))
+      mnist:
+      - RandomBrightness(0.2)
+      - RandomContrast(0.2)
+      - RandomSaturation(0.2)
+    test:
+      base: []
+model.class_index_files:
+  imagenet: imagenet_class_index.json
+  imagenette: imagenet_class_index.json
+  tinyimagenet: tinyimagenet_class_index.json
+model.data_resolution:
+  mnist: 28
+  cifar10: 32
+  cifar100: 32
+  tinyimagenet: 64
+  imagenet: 224
+  snakenet: 224
+  imagenette: 224
+model.data_statistics:
+  mnist:
+    mean:
+    - 0.1307
+    std:
+    - 0.3081
+  cifar10:
+    mean:
+    - 0.5071
+    - 0.4867
+    - 0.4408
+    std:
+    - 0.2675
+    - 0.2565
+    - 0.2761
+  cifar100:
+    mean:
+    - 0.5071
+    - 0.4867
+    - 0.4408
+    std:
+    - 0.2675
+    - 0.2565
+    - 0.2761
+  imagenet:
+    mean:
+    - 0.485
+    - 0.456
+    - 0.406
+    std:
+    - 0.229
+    - 0.224
+    - 0.225
+  imagenette:
+    mean:
+    - 0.485
+    - 0.456
+    - 0.406
+    std:
+    - 0.229
+    - 0.224
+    - 0.225
+  tinyimagenet:
+    mean:
+    - 0.485
+    - 0.456
+    - 0.406
+    std:
+    - 0.229
+    - 0.224
+    - 0.225
+model.data_groups:
+  mnist:
+    '01':
+    - 0
+    - 1
+    '38':
+    - 3
+    - 8
+    '89':
+    - 8
+    - 9
+  tinyimagenet:
+    mollusks:
+    - 13
+    - 14
+    - 15
+    - 16
+    - 17
+    - 18
+    - 19
+    - 46
+    catdogs:
+    - 187
+    - 207
+    - 208
+    - 235
+    - 267
+    - 281
+    - 283
+    - 285
+    - 286
+    - 291
+  imagenet:
+    imagenette:
+    - 0
+    - 217
+    - 482
+    - 491
+    - 497
+    - 566
+    - 569
+    - 571
+    - 574
+    - 701
+    snakes:
+    - 54
+    - 60
+    - 62
+    - 66
+    - 67
+    - 68
+    insects:
+    - 304
+    - 310
+    - 311
+    - 312
+    - 313
+    - 314
+    - 315
+    - 316
+    - 317
+    - 318
+    - 319
+    one:
+    - 0
+  imagenette:
+    one:
+    - 0
+  snakenet:
+    cool:
+    - 1
+    - 2
+    - 4
+  cifar100:
+    invertebrates:
+    - 6
+    - 7
+    - 14
+    - 18
+    - 24
+    - 26
+    - 45
+    - 77
+    - 79
+    - 99
+    alphabet:
+    - 0
+    - 8
+    - 18
+    - 29
+    - 31
+    - 33
+    - 35
+    - 37
+    - 38
+    - 44
+    - 51
+    - 53
+    - 63
+    - 69
+    - 82
+model.palette:
+  full: '#B8860B'
+  self: '#2E8B57'
+  depthpointwise: '#1E3A8A'
+  pointdepthwise: '#3B82F6'
+  local: '#E91E63'
+  localdepthwise: '#FF6347'
+  none: '#808080'
+  nan: '#808080'
+  accent: '#EC4899'
+  feedforward: '#D4A373'
+  recurrence: '#9B59B6'
+  V1: '#ff69b4ff'
+  V2: '#dda0ddff'
+  V4: '#da70d6ff'
+  IT: '#ba55d3ff'
+  classifier: '#808080ff'
+  input: '#6BAA75'
+  middle: '#E9C46A'
+  output: '#C0533A'
+  DyRCNNx8: '#c0c0c0ff'
+  CordsNet: '#9B59B6ff'
+  CorNetRT: '#C88B4Aff'
+model.naming:
+  duration: $D$
+  contrast: $C$
+  interval: $I$
+  noiselevel: $\sigma$
+  ssnr: SSNR
+  noise: $\sigma$
+  stim: $D$
+  stimulus: $D$
+  tau: $\tau$
+  trc: $\Delta_{RC}$
+  tsk: $\Delta_{SK}$
+  rctarget: Recurrence Target
+  rctype: Recurrence Type
+  lossrt: $t_{loss}$
+  idle: $t_{idle}$
+  activityloss: Activity Loss Weight
+  tsteps: $T$
+  feedback: Feedback
+  skip: Skip
+  add: Additive
+  mul: Multiplicative
+  nan: None
+  none: None
+  pattern: Presentation Pattern
+  seed: Seed
+  ffonly: Feedforward Only
+  feedforward: Feedforward
+  recurrence: Recurrent
+  addskip_V4: Skip V1->V4
+  addskip_IT: Skip V1->IT
+  addfeedback_V1: Feedback V1<-V4
+  addfeedback_V2: Feedback V2<-IT
+  layer: Layer
+  status: Status
+  true: 'True'
+  false: 'False'
+  trained: Trained
+  layer1: V1
+  layer2: V2
+  layer3: V4
+  layer4: IT
+  accuracy: Accuracy
+  confidence: Confidence
+  peak_height: Peak Height
+  peak_time: Peak Time
+  peak_ratio: Peak Ratio
+  power: Power
+  duration_experiment: Stimulus Duration
+  contrast_experiment: Stimulus Contrast
+  interval_experiment: Stimulus Interval
+  stability_experiment: Stability
+  response_experiment: Response
+  responseintermediate_experiment: Intermediate Responses
+  responseffonly_experiment: Feedforward Only
+  nullcondition_experiment: Null Condition
+  uniformnoise_experiment: Uniform Noise
+  poissonnoise_experiment: Poisson Noise
+  saltpeppernoise_experiment: Salt & Pepper
+  gaussiannoise_experiment: Gaussian Noise
+  gaussiancorrnoise_experiment: Correlated Gaussian Noise
+  phasescramblednoise_experiment: Phase-scrambled Noise
+model.ordering:
+  layers:
+  - Skip V2->IT
+  - Skip V1->V4
+  - Feedback V2<-IT
+  - Feedback V1<-V4
+  - IT
+  - V4
+  - V2
+  - V1
+  - layer8
+  - layer7
+  - layer6
+  - layer5
+  - layer4
+  - layer3
+  - layer2
+  - layer1
+  rctype:
+  - full
+  - self
+  - depthpointwise
+  - pointdepthwise
+  - local
+  - localdepthwise
+  - none
+  rctarget:
+  - input
+  - middle
+  - output
+  - 'null'
+  feedback:
+  - 'false'
+  - add
+  - mul
+  connection_type:
+  - feedforward
+  - recurrence
+  status:
+  - trained
+model.experiment_config:
+  categories:
+    rctype:
+    - depthpointwise
+    - pointdepthwise
+    - self
+    - full
+    - local
+    - localdepthwise
+    - none
+    rctarget:
+    - output
+    - input
+    - middle
+    pattern:
+    - '1'
+    - '1011'
+    - '1001'
+    - '1000'
+    dsteps:
+    - 1
+    - 20
+    tsteps:
+    - 4
+    - 8
+    - 14
+    - 20
+    - 26
+    dt:
+    - 2
+    tau:
+    - 3
+    - 5
+    - 9
+    tff:
+    - 0
+    - 10
+    trc:
+    - 2
+    - 6
+    - 10
+    tsk:
+    - 0
+    - 4
+    - 8
+    lossrt:
+    - 0
+    - 4
+    - 8
+    - 18
+    - 28
+    idle:
+    - 0
+    - 1
+    - 5
+    - 10
+    - 20
+    feedback:
+    - 'false'
+    - add
+    - mul
+    skip:
+    - 'true'
+    - 'false'
+    dloader:
+    - ffcv
+    - torch
+    ffonly:
+    - 'true'
+    - 'false'
+    pretrained:
+    - 'true'
+    activityloss:
+    - '0'
+    - '0.0002'
+    - '0.02'
+    - '0.2'
+    - '1.0'
+  response:
+    parameter: stim
+    data_loader: StimulusDuration
+    data_args:
+      dsteps: 60
+      intro: 1
+      stim: 30
+      idle: 20
+  responseffonly:
+    parameter: ffonly
+    data_loader: StimulusDuration
+    data_args:
+      dsteps: 4
+      intro: 0
+      stim: 2
+      ffonly:
+      - 'true'
+      - 'false'
+  responseintermediate:
+    status:
+    - trained-epoch=49
+    - trained-epoch=99
+    - trained-epoch=149
+    - trained-epoch=199
+    - trained-epoch=249
+    - trained-epoch=299
+    parameter: stim
+    data_loader: StimulusDuration
+    data_args:
+      dsteps: 60
+      intro: 1
+      stim: 30
+      idle: 20
+  stabilityintermediate:
+    status:
+    - trained-epoch=199
+    - trained-epoch=249
+    - trained-epoch=299
+    - trained-epoch=349
+    parameter: stim
+    data_loader: StimulusDuration
+    data_args:
+      dsteps: 125
+      intro: 1
+      stim: 100
+      idle: 20
+  stability:
+    parameter: stim
+    data_loader: StimulusDuration
+    data_args:
+      dsteps: 125
+      stim:
+      - 25
+      - 100
+      intro: 0
+      idle: 20
+  nullcondition:
+    parameter: stim
+    data_loader: StimulusDuration
+    data_args:
+      dsteps: 200
+      intro: 95
+      stim: 10
+  idleresponse:
+    parameter: idle
+    data_loader: StimulusDuration
+    data_args:
+      dsteps: 30
+      intro: 5
+      stim: 15
+      idle:
+      - 0
+      - 1
+      - 5
+      - 10
+      - 20
+      - 40
+  duration:
+    parameter: stim
+    data_loader: StimulusDuration
+    data_args:
+      dsteps: 30
+      intro: 1
+      stim:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 10
+      - 15
+      - 20
+      idle: 20
+  contrast:
+    parameter: contrast
+    data_loader: StimulusContrast
+    data_args:
+      dsteps: 30
+      intro: 1
+      stim: 20
+      contrast:
+      - 0.1
+      - 0.2
+      - 0.3
+      - 0.4
+      - 0.6
+      - 0.8
+      - 1.0
+      idle: 20
+  interval:
+    parameter: interval
+    data_loader: StimulusInterval
+    data_args:
+      dsteps: 40
+      intro: 1
+      stim: 5
+      interval:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 6
+      - 8
+      - 10
+      idle: 20
+  uniformnoise:
+    parameter: ssnr
+    data_loader: StimulusNoise
+    data_args:
+      dsteps: 20
+      noisetype: uniform
+      ssnr:
+      - 0.2
+      - 0.4
+      - 0.6
+      - 0.8
+      - 1.0
+      tempmode: dynamic
+      idle: 20
+  uniformnoiseffonly:
+    parameter: ssnr
+    data_loader: StimulusNoise
+    data_args:
+      dsteps: 20
+      noisetype: uniform
+      ssnr:
+      - 0.2
+      - 0.4
+      - 0.6
+      - 0.8
+      - 1.0
+      tempmode: dynamic
+      idle: 20
+      ffonly: 'true'
+  saltpeppernoise:
+    parameter: noiselevel
+    data_loader: StimulusNoise
+    data_args:
+      dsteps: 20
+      noisetype: saltpepper
+      ssnr:
+      - 0.2
+      - 0.4
+      - 0.6
+      - 0.8
+      - 1.0
+      tempmode: dynamic
+      idle: 20
+  poissonnoise:
+    parameter: ssnr
+    data_loader: StimulusNoise
+    data_args:
+      dsteps: 20
+      noisetype: poisson
+      ssnr:
+      - 0.2
+      - 0.4
+      - 0.6
+      - 0.8
+      - 1.0
+      tempmode: dynamic
+      idle: 20
+  poissonnoiseffonly:
+    parameter: ssnr
+    data_loader: StimulusNoise
+    data_args:
+      dsteps: 20
+      noisetype: poisson
+      ssnr:
+      - 0.0
+      - 0.2
+      - 0.4
+      - 0.6
+      - 0.8
+      - 1.0
+      tempmode: dynamic
+      idle: 20
+      ffonly: 'true'
+  gaussiannoise:
+    parameter: ssnr
+    data_loader: StimulusNoise
+    data_args:
+      dsteps: 20
+      noisetype: gaussian
+      ssnr:
+      - 0.0
+      - 0.1
+      - 0.2
+      - 0.3
+      - 0.4
+      - 0.5
+      - 0.6
+      - 0.7
+      - 0.8
+      - 0.9
+      - 1.0
+      tempmode: dynamic
+      idle: 20
+  gaussiancorrnoise:
+    parameter: ssnr
+    data_loader: StimulusNoise
+    data_args:
+      dsteps: 20
+      noisetype: gaussian
+      spatialcorr: 'true'
+      ssnr:
+      - 0.0
+      - 0.1
+      - 0.2
+      - 0.3
+      - 0.4
+      - 0.5
+      - 0.6
+      - 0.7
+      - 0.8
+      - 0.9
+      - 1.0
+      tempmode: dynamic
+      idle: 20
+  phasescramblednoise:
+    parameter: ssnr
+    data_loader: StimulusNoise
+    data_args:
+      dsteps: 20
+      noisetype: phasescrambled
+      ssnr:
+      - 0.0
+      - 0.2
+      - 0.4
+      - 0.6
+      - 0.8
+      - 1.0
+      tempmode: dynamic
+      idle: 20
+  gaussiannoiseffonly:
+    parameter: ssnr
+    data_loader: StimulusNoise
+    data_args:
+      dsteps: 20
+      noisetype: gaussian
+      ssnr:
+      - 0.0
+      - 0.1
+      - 0.2
+      - 0.3
+      - 0.4
+      - 0.5
+      - 0.6
+      - 0.7
+      - 0.8
+      - 0.9
+      - 1.0
+      tempmode: dynamic
+      idle: 20
+      ffonly: 'true'
+  gaussiancorrnoiseffonly:
+    parameter: ssnr
+    data_loader: StimulusNoise
+    data_args:
+      dsteps: 20
+      noisetype: gaussian
+      spatialcorr: 'true'
+      ssnr:
+      - 0.0
+      - 0.1
+      - 0.2
+      - 0.3
+      - 0.4
+      - 0.5
+      - 0.6
+      - 0.7
+      - 0.8
+      - 0.9
+      - 1.0
+      tempmode: dynamic
+      idle: 20
+      ffonly: 'true'
+  phasescramblednoiseffonly:
+    parameter: ssnr
+    data_loader: StimulusNoise
+    data_args:
+      dsteps: 20
+      noisetype: phasescrambled
+      ssnr:
+      - 0.0
+      - 0.2
+      - 0.4
+      - 0.6
+      - 0.8
+      - 1.0
+      tempmode: dynamic
+      idle: 20
+      ffonly: 'true'
+  noise:
+    parameter: ssnr
+  hundred:
+    parameter: stim
+    data_loader: StimulusDuration
+    data_args:
+      dsteps: 200
+      stim: 100
+      intro: 0
+      idle: 100
+  ten:
+    parameter: stim
+    data_loader: StimulusDuration
+    data_args:
+      dsteps: 10
+      stim: 5
+      intro: 0
+      idle: 0
+model.local_mode:
+  enable_progress_bar: true
+  verbose: true
+  use_ffcv: false
+  num_workers: 0
+  persistent_workers: false
+model.debug_mode:
+  batch_size: 3
+  check_val_every_n_epoch: 1
+  log_every_n_steps: 1
+  accumulate_grad_batches: 1
+  enable_progress_bar: true
+model.large_dataset_mode:
+  use_ffcv: true
+  order: QUASI_RANDOM
+  persistent_workers: false
+  num_workers: 4
+  precision: bf16-mixed
+  pin_memory: false
+  os_cache: false
+  chunksize: 5000
+model.distributed_mode:
+  use_distributed: false
+  strategy: ddp
+  devices: 4
+  num_nodes: 1
+  sync_batchnorm: true
+  precision: bf16-mixed
+  accelerator: gpu
+  accumulate_grad_batches: 2
+  num_sanity_val_steps: 0
+  store_train_responses: 0
+  store_val_responses: 0
+  check_val_every_n_epoch: 100
+  monitor_checkpoint: train_loss
+  num_workers: 8
+  persistent_workers: true
+  pin_memory: false
+  order: QUASI_RANDOM
+  os_cache: true
+  chunksize: 5000
+  drop_last: true
+  train:
+    data:
+      batch_size: 512
+      use_ffcv: true
+  strategy_kwargs:
+    find_unused_parameters: false
+    gradient_as_bucket_view: true
+    process_group_backend: nccl
+    static_graph: false
+model.init_with_pretrained: false
+model.model_args:
+  tsteps: 20
+  dt: 2
+  tau: 5
+  tff: 0
+  trc: 6
+  tsk: 0
+  lossrt: 4
+  activityloss: 0.0002
+  pattern: '1'
+  rctype: full
+  rctarget: output
+  skip: 'true'
+  feedback: 'false'
+model.category:
+- activityloss
+- tsteps
+- lossrt
+- tsk
+- skip
+- rctype
+- rctarget
+model.experiment:
+- uniformnoise
+- uniformnoiseffonly
+- contrast
+- duration
+- interval
+- response
+model.tff: '0'
+model.trc: '6'
+model.tfb: '12'
+model.tsk: '0'
+model.lossrt: '8'
+model.activityloss: '0.0002'
+model.pattern: '1'
+model.rctarget: output
+data.seed: 7000
+data.log_level: INFO
+data.data_name: imagenette
+data.data_group: all
+data.train: true
+data.use_ffcv: false
+data.batch_size: 48
+data.num_workers: 0
+data.persistent_workers: false
+data.drop_last: true
+data.train_ratio: 0.9
+data.transform_backend: torch
+data.transform_context: train
+data.transform_preset: imagenette
+data.target_data_name: imagenette
+data.target_data_group: all
+data.resolution: null
+data.normalize: null
+data.pixel_range: 0-1
+data.data_timesteps: 1
+data.non_input_value: 0
+data.non_label_index: -1
+data.use_distributed: false
+data.encoding: image
+data.writer_mode: proportion
+data.max_resolution: 224
+data.compress_probability: 0.25
+data.jpeg_quality: 60
+data.chunksize: 1000
+data.page_size: 4194304
+data.dtype: torch.bfloat16
+data.precision: bf16-mixed
+data.batches_ahead: 3
+data.prefetch_factor: null
+data.order: 3
+data.os_cache: true
+data.cache_size: 1000
+data.pin_memory: false
+data.shuffle: true
+data.sampler: null
+data.dataloader_kwargs: {}
+data.dataset_path: /scratch/tw2838/data/interim/imagenette/train_all
+data.output: /scratch/tw2838/DynVision_Working/models/DyRCNNx4/DyRCNNx4:tsteps=20+dt=2+tau=9+tff=0+trc=6+tfb=12+tsk=0+lossrt=8+activityloss=0.0002+pattern=1+rctype=depthpointwise+rctarget=output+skip=true+feedback=add_7000/imagenette/init.pt
+data.effective_dtype: torch.float16
+dataset_path: /scratch/tw2838/data/interim/imagenette/train_all
+output: /scratch/tw2838/DynVision_Working/models/DyRCNNx4/DyRCNNx4:tsteps=20+dt=2+tau=9+tff=0+trc=6+tfb=12+tsk=0+lossrt=8+activityloss=0.0002+pattern=1+rctype=depthpointwise+rctarget=output+skip=true+feedback=add_7000/imagenette/init.pt
+_active_modes: []
+_provenance:
+  seed: cli
+  log_level: config
+  status: config
+  test: config
+  epochs: config
+  check_val_every_n_epoch: config
+  log_every_n_steps: config
+  accumulate_grad_batches: config
+  num_sanity_val_steps: config
+  profiler: config
+  benchmark: config
+  enable_progress_bar: config
+  limit_val_batches: config
+  reload_dataloaders_every_n_epochs: config
+  automatic_optimization: config
+  clip_gradients: config
+  gradient_clip_algorithm: config
+  gradient_clip_val: config
+  deterministic: config
+  devices: config
+  num_nodes: config
+  accelerator: config
+  strategy_kwargs: config
+  early_stopping_min_delta: config
+  early_stopping_monitor: config
+  early_stopping_mode: config
+  save_top_k: config
+  monitor_checkpoint: config
+  checkpoint_mode: config
+  save_last: config
+  every_n_epochs: config
+  test_batch_size: config
+  logger: config
+  verbose: config
+  lr_scaling: config
+  mounted_datasets: config
+  transform_presets: config
+  class_index_files: config
+  data_resolution: config
+  data_statistics: config
+  data_groups: config
+  palette: config
+  naming: config
+  ordering: config
+  experiment_config: config
+  local_mode: config
+  debug_mode: config
+  large_dataset_mode: config
+  distributed_mode: config
+  init_with_pretrained: config
+  model_args: config
+  category: config
+  experiment: config
+  dataset_path: cli
+  output: cli
+  tff: cli
+  trc: cli
+  tfb: cli
+  tsk: cli
+  lossrt: cli
+  activityloss: cli
+  pattern: cli
+  rctarget: cli
+  model.seed: cli:model
+  model.log_level: config:model
+  model.dataset_path: cli:model
+  model.output: cli:model
+  model.classifier_name: config:model
+  model.store_train_responses: config:model
+  model.store_val_responses: config:model
+  model.store_test_responses: config:model
+  model.store_responses_on_cpu: config:model
+  model.early_test_stop: config:model
+  model.response_resolution: config:model
+  model.loss: config:model
+  model.loss_reaction_time: config:model
+  model.non_label_index: config:model
+  model.target_dtype: config:model
+  model.retain_graph: config:model
+  model.loss_configs: config:model
+  model.optimizer: config:model
+  model.optimizer_kwargs: config:model
+  model.optimizer_configs: config:model
+  model.lr_parameter_groups: config:model
+  model.learning_rate: config:model
+  model.scheduler: config:model
+  model.scheduler_kwargs: config:model
+  model.scheduler_configs: config:model
+  model.store_responses: config:model
+  model.model_name: cli:model
+  model.status: config:model
+  model.test: config:model
+  model.epochs: config:model
+  model.check_val_every_n_epoch: config:model
+  model.log_every_n_steps: config:model
+  model.accumulate_grad_batches: config:model
+  model.num_sanity_val_steps: config:model
+  model.profiler: config:model
+  model.benchmark: config:model
+  model.enable_progress_bar: config:model
+  model.limit_val_batches: config:model
+  model.reload_dataloaders_every_n_epochs: config:model
+  model.automatic_optimization: config:model
+  model.clip_gradients: config:model
+  model.gradient_clip_algorithm: config:model
+  model.gradient_clip_val: config:model
+  model.deterministic: config:model
+  model.devices: config:model
+  model.num_nodes: config:model
+  model.accelerator: config:model
+  model.strategy_kwargs: config:model
+  model.early_stopping_min_delta: config:model
+  model.early_stopping_monitor: config:model
+  model.early_stopping_mode: config:model
+  model.save_top_k: config:model
+  model.monitor_checkpoint: config:model
+  model.checkpoint_mode: config:model
+  model.save_last: config:model
+  model.every_n_epochs: config:model
+  model.test_batch_size: config:model
+  model.logger: config:model
+  model.verbose: config:model
+  model.lr_scaling: config:model
+  model.mounted_datasets: config:model
+  model.transform_presets: config:model
+  model.class_index_files: config:model
+  model.data_resolution: config:model
+  model.data_statistics: config:model
+  model.data_groups: config:model
+  model.palette: config:model
+  model.naming: config:model
+  model.ordering: config:model
+  model.experiment_config: config:model
+  model.local_mode: config:model
+  model.debug_mode: config:model
+  model.large_dataset_mode: config:model
+  model.distributed_mode: config:model
+  model.init_with_pretrained: config:model
+  model.model_args: config:model
+  model.category: config:model
+  model.experiment: config:model
+  model.dt: cli:model
+  model.tau: cli:model
+  model.skip: cli:model
+  model.feedback: cli:model
+  model.n_timesteps: cli:model
+  model.recurrence_type: cli:model
+  model.tff: cli:model
+  model.trc: cli:model
+  model.tfb: cli:model
+  model.tsk: cli:model
+  model.lossrt: cli:model
+  model.activityloss: cli:model
+  model.pattern: cli:model
+  model.rctarget: cli:model
+  model.input_dims: default; runtime
+  model.n_classes: default; runtime
+  data.seed: cli:data
+  data.log_level: config:data
+  data.dataset_path: cli:data
+  data.output: cli:data
+  data.train: config:data
+  data.non_label_index: config:data
+  data.data_group: config:data
+  data.pixel_range: config:data
+  data.encoding: config:data
+  data.writer_mode: config:data
+  data.max_resolution: config:data
+  data.compress_probability: config:data
+  data.jpeg_quality: config:data
+  data.chunksize: config:data
+  data.page_size: config:data
+  data.batches_ahead: config:data
+  data.shuffle: config:data
+  data.cache_size: config:data
+  data.train_ratio: config:data
+  data.precision: config:data
+  data.batch_size: config:data
+  data.order: config:data
+  data.os_cache: config:data
+  data.drop_last: config:data
+  data.persistent_workers: config:data
+  data.prefetch_factor: config:data
+  data.dataloader_kwargs: config:data
+  data.non_input_value: config:data
+  data.data_timesteps: config:data
+  data.use_ffcv: config:data
+  data.use_distributed: config:data
+  data.num_workers: config:data
+  data.pin_memory: config:data
+  data.data_name: cli:data
