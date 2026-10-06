@@ -49,7 +49,7 @@ import torch
 import torch.nn.functional as F
 import yaml
 
-from utils.activation_utils import capture_layer_responses
+from utils.activation_utils import capture_layer_responses, disable_response_storage
 from utils.cka_loss import linear_cka
 from utils.pseudo_label_utils import extract_pseudo_labels
 from utils.student_model_utils import create_aligned_control_pair
@@ -1155,6 +1155,10 @@ def train_alignment_experiment(
     set_global_seed(cfg.runtime.seed)
 
     device = resolve_device(cfg.runtime.device)
+
+    # Let cuDNN pick the fastest convolution algorithms for our fixed input
+    # size (as in the target's training: trainer.benchmark=true).
+    torch.backends.cudnn.benchmark = True
     dirs = setup_output_dirs(cfg.runtime.output_dir)
 
     logger = setup_logging(
@@ -1192,6 +1196,7 @@ def train_alignment_experiment(
         verbose=True,
     )
     target_model.eval()
+    disable_response_storage(target_model)
 
     # -----------------------------------------------------------------
     # Student model class + exactly matched aligned/control initialization.
@@ -1211,6 +1216,9 @@ def train_alignment_experiment(
         initialize_lazy=cfg.student.initialize_lazy,
         probe_shape=tuple(cfg.student.probe_shape),
     )
+    disable_response_storage(aligned_model)
+    disable_response_storage(control_model)
+    logger.info("DynVision response storage disabled for target, aligned, control.")
 
     # Save initial states immediately.
     save_checkpoint(

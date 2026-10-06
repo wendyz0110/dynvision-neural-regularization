@@ -70,7 +70,7 @@ from train_alignment import (
     resolve_device,
     unpack_batch,
 )
-from utils.activation_utils import capture_layer_responses
+from utils.activation_utils import capture_layer_responses, disable_response_storage
 from utils.data_utils import build_test_loader, load_split
 from utils.student_model_utils import build_student_model, initialize_lazy_connections
 from utils.target_model_utils import load_target_model
@@ -157,6 +157,7 @@ def load_student(cfg: ExperimentConfig, path: Path, device: torch.device) -> tor
     payload = torch.load(path, map_location=device, weights_only=False)
     model.load_state_dict(payload["model_state_dict"], strict=True)
     model.eval()
+    disable_response_storage(model)
     for p in model.parameters():
         p.requires_grad_(False)
     return model
@@ -420,6 +421,7 @@ def main(argv: Optional[Sequence[str]] = None) -> Dict:
     }
     for m in models.values():
         m.eval()
+        disable_response_storage(m)
     student_epoch = checkpoint_epoch(ckpt_dir / f"aligned_{args.checkpoint}.pt")
     logger.info("Students: %s checkpoints (epoch %d)", args.checkpoint, student_epoch)
 

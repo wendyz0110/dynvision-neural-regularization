@@ -178,3 +178,31 @@ def capture_layer_responses(model, x: torch.Tensor,
         )
 
     return logits, activations
+
+
+def disable_response_storage(model) -> None:
+    """
+    Turn off DynVision's built-in response recording for this model.
+
+    By default every forward pass copies EVERY layer's activity at EVERY
+    timestep to the CPU (DynVision's StorageBuffer: a "cyclic" buffer reports
+    should_store() == True even with capacity 0). DynVision's own Lightning
+    training disables this during training; called directly, the model keeps
+    it on, which makes each batch many times slower (tens of GB copied
+    GPU -> CPU per batch for our three models).
+
+    capture_layer_responses() does not depend on this buffer, so model
+    outputs and captured activations are unchanged.
+    """
+    if not hasattr(model, "storage"):
+        return
+    from dynvision.base.storage import StorageBuffer
+
+    model.storage = StorageBuffer(
+        max_responses=0,
+        max_records=0,
+        response_strategy="fixed",
+        record_strategy="fixed",
+    )
+    if model.storage.responses.should_store():
+        raise RuntimeError("Could not disable DynVision response storage.")
