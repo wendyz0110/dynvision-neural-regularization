@@ -35,12 +35,14 @@ alignment:
   min_cka_batch_size: 16
 
 optimization:
-  epochs: 1                   # SMOKE (real run: 100)
+  epochs: 1                   # SMOKE (real run: 200)
   learning_rate: 1.73e-4      # rule: 2e-4 * sqrt(batch / 64) = 1.73e-4 at batch 48
   weight_decay: 5.0e-4
   lr_group_factors: {recurrence: 0.2, feedback: 0.5}
   accumulate_grad_batches: 1
   max_grad_norm: 1.0         # gradient clipping (total L2 norm), as in the target's training
+  use_cosine_scheduler: true
+  cosine_t_max: 500
 
 runtime:
   seed: 2723

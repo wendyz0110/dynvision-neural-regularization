@@ -27,12 +27,14 @@ alignment:
   min_cka_batch_size: 16
 
 optimization:
-  epochs: 100
+  epochs: 200                 # = target's training length
   learning_rate: 1.73e-4      # rule: 2e-4 * sqrt(batch / 64) = 1.73e-4 at batch 48
   weight_decay: 5.0e-4
   lr_group_factors: {recurrence: 0.2, feedback: 0.5}
   accumulate_grad_batches: 1
   max_grad_norm: 1.0         # gradient clipping (total L2 norm), as in the target's training
+  use_cosine_scheduler: true  # as in the target: CosineAnnealingLR, stepped once per epoch
+  cosine_t_max: 500           # target's T_max; after 200 epochs LR is ~65% of the start value
 
 runtime:
   seed: 2723                  # must differ from the target's 7000
