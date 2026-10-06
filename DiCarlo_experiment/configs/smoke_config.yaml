@@ -16,7 +16,7 @@ data:
   val_ratio: 0.2
   split_seed: 2723
   split_file: null
-  batch_size: 64
+  batch_size: 48              # = target's per-step batch; 64 OOMs on 44 GB GPUs
   num_workers: 4
   train_augmentation: true
   input_timesteps: 20
@@ -36,7 +36,7 @@ alignment:
 
 optimization:
   epochs: 1                   # SMOKE (real run: 100)
-  learning_rate: 2.0e-4
+  learning_rate: 1.73e-4      # rule: 2e-4 * sqrt(batch / 64) = 1.73e-4 at batch 48
   weight_decay: 5.0e-4
   lr_group_factors: {recurrence: 0.2, feedback: 0.5}
   accumulate_grad_batches: 1

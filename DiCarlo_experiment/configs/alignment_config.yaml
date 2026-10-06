@@ -1,20 +1,20 @@
 # First-run config for train_alignment.py (decisions from 2026-10-05).
 # Anything not listed here uses the defaults in train_alignment.py.
-# Edit the two paths marked EDIT before running on Torch.
+# Paths are set for NYU Torch (/scratch/wz2723/dynvision).
 
 data:
   factory: "utils.data_utils:build_dataloaders"
-  root: "/scratch/wz2723/dynvision/data/imagenette2-320"  
+  root: "/scratch/wz2723/dynvision/data/imagenette2-320"
   val_ratio: 0.2              # 80/20 split of the official train/ folder
   split_seed: 2723
   split_file: null            # set to an earlier run's data/split.json to reuse it
-  batch_size: 64              # fall back to 48 if it does not fit in GPU memory
+  batch_size: 48              # = target's per-step batch; 64 OOMs on 44 GB GPUs
   num_workers: 4
   train_augmentation: true    # target's own augmentation set; train loader only
   input_timesteps: 20
 
 target:
-  checkpoint_path: null   # EDIT
+  checkpoint_path: null       # null = repo copy: DiCarlo_experiment/x4_generators_tfb12/x4_pointdepthwise_tfb12/trained.pt
   pseudo_label_timestep: -1   # pseudo-label = target prediction at the last step
 
 alignment:
@@ -28,7 +28,7 @@ alignment:
 
 optimization:
   epochs: 100
-  learning_rate: 2.0e-4       # for batch 64; rule: 2e-4 * sqrt(batch / 64)
+  learning_rate: 1.73e-4      # rule: 2e-4 * sqrt(batch / 64) = 1.73e-4 at batch 48
   weight_decay: 5.0e-4
   lr_group_factors: {recurrence: 0.2, feedback: 0.5}
   accumulate_grad_batches: 1
