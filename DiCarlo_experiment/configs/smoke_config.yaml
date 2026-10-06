@@ -1,0 +1,54 @@
+# Smoke test for train_alignment.py on Torch: ONE full epoch with the exact
+# settings of alignment_config.yaml. Purpose: check GPU memory at batch 64,
+# measure time per epoch, check GPU utilization, and produce a small run
+# folder for a test of evaluate_alignment.py.
+#
+# Lines that differ from alignment_config.yaml are marked  # SMOKE.
+# Everything else must stay identical to the real config.
+#
+# The output folder must not exist yet (re-running into the same folder
+# overwrites checkpoints and appends to the CSVs/logs). For a second smoke
+# test, change smoke_01 -> smoke_02, or delete the old smoke folder first.
+
+data:
+  factory: "utils.data_utils:build_dataloaders"
+  root: "/scratch/wz2723/dynvision/data/imagenette2-320"
+  val_ratio: 0.2
+  split_seed: 2723
+  split_file: null
+  batch_size: 64
+  num_workers: 4
+  train_augmentation: true
+  input_timesteps: 20
+
+target:
+  checkpoint_path: null       # null = repo copy of trained.pt
+  pseudo_label_timestep: -1
+
+alignment:
+  layer: "IT"
+  timestep: -1
+  ce_weight: 1.0
+  cka_weight: 1.0
+  ce_first_timestep: 4
+  warmup_epochs: 0
+  min_cka_batch_size: 16
+
+optimization:
+  epochs: 1                   # SMOKE (real run: 100)
+  learning_rate: 2.0e-4
+  weight_decay: 5.0e-4
+  lr_group_factors: {recurrence: 0.2, feedback: 0.5}
+  accumulate_grad_batches: 1
+  max_grad_norm: null
+
+runtime:
+  seed: 2723
+  device: "cuda"
+  precision: "bfloat16"
+  output_dir: "/scratch/wz2723/dynvision/runs/smoke_01"   # SMOKE
+  log_every_n_steps: 5        # SMOKE (real run: 20)
+
+checkpoint:
+  save_last: true
+  save_every_n_epochs: 1      # SMOKE (real run: 10) -> epoch checkpoint gets tested too
