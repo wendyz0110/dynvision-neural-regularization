@@ -14,6 +14,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=48G
 #SBATCH --gres=gpu:1
+#SBATCH --constraint="h100|h200"
 #SBATCH --time=03:00:00
 #SBATCH --output=/scratch/wz2723/dynvision/runs/slurm_logs/%x_%j.out
 #SBATCH --mail-type=END,FAIL

@@ -777,6 +777,21 @@ def _item_or_none(value: Optional[torch.Tensor]) -> Optional[float]:
     return None if value is None else value.detach().item()
 
 
+def release_recurrent_state(model: torch.nn.Module) -> None:
+    """
+    Drop the hidden states a DynVision model keeps after a forward pass.
+
+    Each layer holds its last few timesteps of activity (needed for the
+    recurrence/feedback delays) until the model's NEXT forward resets them.
+    With three models per batch that leftover state stacks up on the GPU
+    (target + previous control are still resident during the aligned
+    forward). Resetting right after use frees it. Results are unchanged:
+    every forward starts with a reset anyway.
+    """
+    if hasattr(model, "reset"):
+        model.reset()
+
+
 def _fmt(value: Optional[float]) -> str:
     return "n/a" if value is None else f"{value:.5f}"
 
@@ -930,6 +945,7 @@ def run_epoch(
             # length 1 and index 0 IS align_t (same for aligned/control below).
             target_repr = target_acts[layer][:, 0]
             del target_acts, target_logits
+        release_recurrent_state(target_model)
 
         # -------------------------------------------------------------
         # Aligned model: CE + cka_weight * log(1 - CKA).
@@ -982,6 +998,7 @@ def run_epoch(
                     cfg.optimization.max_grad_norm,
                 )
         del aligned_repr
+        release_recurrent_state(aligned_model)
 
         # -------------------------------------------------------------
         # Control model: same pseudo-label CE, no alignment term.
@@ -1024,6 +1041,7 @@ def run_epoch(
                     control_optimizer,
                     cfg.optimization.max_grad_norm,
                 )
+        release_recurrent_state(control_model)
 
         # -------------------------------------------------------------
         # Batch metrics.

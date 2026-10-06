@@ -319,6 +319,8 @@ def collect_pass(
             if keep_logits:
                 logits[name].append(out.float().cpu())
             del acts, out
+            if hasattr(model, "reset"):
+                model.reset()  # free hidden states before the next model runs
 
         labels.append(gt[:take].cpu())
         sample_ids += [int(i) for i in ids[:take]]
