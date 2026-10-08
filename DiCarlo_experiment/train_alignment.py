@@ -871,9 +871,9 @@ def run_epoch(
         else cfg.alignment.cka_weight
     )
 
-    layer = cfg.alignment.layer
-    label_t = cfg.target.pseudo_label_timestep
-    align_t = cfg.alignment.timestep
+    layer = cfg.alignment.layer # IT
+    label_t = cfg.target.pseudo_label_timestep # last timestep
+    align_t = cfg.alignment.timestep # last time step
 
     meters = {"aligned": _new_meter(), "control": _new_meter()}
     n_small_batches = 0
@@ -893,7 +893,7 @@ def run_epoch(
         # aligned, and control.
         model_input = ensure_temporal_input(
             images,
-            n_timesteps=cfg.data.input_timesteps,
+            n_timesteps=cfg.data.input_timesteps, # 20
         )  # turn into DynVision input shape
 
         batch_size = model_input.shape[0]
