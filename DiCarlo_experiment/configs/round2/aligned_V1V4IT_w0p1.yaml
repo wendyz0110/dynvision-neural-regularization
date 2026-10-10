@@ -1,0 +1,64 @@
+# Round 2 (2026-10-10) — run "aligned_V1V4IT_w0p1": CE + 0.1 * sum over V1, V4, IT of log(1 - CKA)
+# The four round-2 configs are identical except experiment.* , alignment.layers
+# and runtime.output_dir. Everything else matches alignment_run_01, minus the
+# training augmentation (the cached pipeline has none), so round-2 results are
+# compared with each other, not with run_01.
+
+experiment:
+  role: "aligned"
+  description: "CE + 0.1 * sum over V1, V4, IT of log(1 - CKA)"
+
+cache:
+  image_dir: "/scratch/wz2723/dynvision/cache/imagenette_images"
+  target_dir: "/scratch/wz2723/dynvision/cache/targets/x4_surrogate"
+
+data:
+  root: "/scratch/wz2723/dynvision/data/imagenette2-320"
+  # Same train/val images as run_01 and as every other round-2 run.
+  split_file: "/scratch/wz2723/dynvision/runs/alignment_run_01/data/split.json"
+  batch_size: 48
+  input_timesteps: 20
+  shuffle_seed: 2723          # same in every compared run -> identical batches
+  num_workers: 8              # cache-reading workers (node has 12 CPUs)
+
+student:
+  # Architecture: DynVision defaults for DyRCNNx4, as in run_01.
+  init_checkpoint: "/scratch/wz2723/dynvision/cache/student_init/x4_seed2723.pt"
+  init_seed: 2723             # used only by make_student_init.py
+
+alignment:
+  layers:
+    - {name: V1, timestep: -1, weight: 0.1}
+    - {name: V4, timestep: -1, weight: 0.1}
+    - {name: IT, timestep: -1, weight: 0.1}
+  monitor_layers: [V1, V4, IT]   # CKA logged for every run (no gradient)
+  ce_weight: 1.0
+  ce_first_timestep: 4
+  pseudo_label_timestep: -1      # target's final prediction
+  warmup_epochs: 0
+  min_cka_batch_size: 16
+
+optimization:
+  epochs: 200
+  learning_rate: 1.73e-4         # 2e-4 * sqrt(48 / 64)
+  weight_decay: 5.0e-4
+  lr_group_factors: {recurrence: 0.2, feedback: 0.5}
+  accumulate_grad_batches: 1
+  max_grad_norm: 1.0
+  use_cosine_scheduler: true
+  cosine_t_max: 500
+
+runtime:
+  seed: 2723
+  device: "cuda"
+  precision: "bfloat16"
+  output_dir: "/scratch/wz2723/dynvision/runs/round2/aligned_V1V4IT_w0p1"
+  log_every_n_steps: 20
+
+checkpoint:
+  monitor: "val_total_loss"      # best.pt; last.pt is written every epoch anyway
+  mode: "min"
+  save_every_n_epochs: 10        # trajectory checkpoints for the evaluation
+
+diagnostics:
+  gradient_terms: true           # diag_* columns: per-term gradient norms, once per epoch

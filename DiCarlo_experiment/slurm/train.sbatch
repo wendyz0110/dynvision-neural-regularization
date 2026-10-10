@@ -1,12 +1,17 @@
 #!/bin/bash
-# Full training run (train_alignment.py). Usually submitted through submit.sh,
-# which also queues the evaluation to start after this job succeeds.
+# Train ONE student (train_student.py): control, aligned_IT, ... each is its
+# own job with its own config. Submit the compared runs side by side.
 #
 # Cluster: NYU burst (Google Cloud), account gm3239, partition c12m85-a100-1
 # (1x A100 40 GB, 12 CPUs, 85 GB RAM per node; the whole node is allocated).
-# The Torch version of this script is in git history (commit d26c953).
+# The Torch version of this script is in git history (commit d26c953);
+# the three-model train_alignment.py version is in commit b29799d.
 #
-# Direct use:  sbatch train.sbatch [config]      (default: configs/alignment_config.yaml)
+# Usage:
+#   sbatch train.sbatch configs/student_control.yaml           # new run
+#   sbatch train.sbatch configs/student_control.yaml resume    # continue from
+#                                                              # <run dir>/checkpoints/last.pt
+# Config paths are relative to DiCarlo_experiment/.
 #
 #SBATCH --job-name=dicarlo_train
 #SBATCH --account=gm3239
@@ -27,21 +32,30 @@ REPO=/scratch/wz2723/dynvision/DynVision
 OVERLAY=/scratch/wz2723/dynvision/overlay-15GB-500K.ext3
 SIF=/share/apps/images/cuda12.1.1-cudnn8.9.0-devel-ubuntu22.04.2.sif
 LOG_DIR=/scratch/wz2723/dynvision/runs/slurm_logs
-CONFIG=${1:-configs/alignment_config.yaml}     # relative to DiCarlo_experiment/
+CONFIG=${1:?usage: sbatch train.sbatch <config.yaml> [resume]}
+MODE=${2:-new}
 
 cd "$REPO/DiCarlo_experiment"
 
 RUN_DIR=$(grep -E '^[[:space:]]*output_dir:' "$CONFIG" \
           | sed -E 's/^[^:]*:[[:space:]]*"?([^"#]*)"?.*$/\1/' | xargs)
 
-if [ -e "$RUN_DIR" ]; then
-    echo "ERROR: $RUN_DIR already exists. Change output_dir in $CONFIG" \
-         "or remove the old folder, then resubmit."
-    exit 1
-fi
+case "$MODE" in
+    new)
+        if [ -e "$RUN_DIR" ]; then
+            echo "ERROR: $RUN_DIR already exists. Change output_dir in $CONFIG," \
+                 "remove the old folder, or resubmit with 'resume'."
+            exit 1
+        fi
+        RESUME_FLAG="" ;;
+    resume)
+        RESUME_FLAG="--resume" ;;
+    *)
+        echo "ERROR: second argument must be 'resume' (or nothing), got '$MODE'"; exit 1 ;;
+esac
 
 echo "job $SLURM_JOB_ID on $(hostname) | start $(date)"
-echo "config: $CONFIG | run dir: $RUN_DIR"
+echo "config: $CONFIG | run dir: $RUN_DIR | mode: $MODE"
 echo "git commit: $(git -C "$REPO" rev-parse HEAD)"
 if [ -n "$(git -C "$REPO" status --porcelain --untracked-files=no)" ]; then
     echo "WARNING: repo has uncommitted changes:"
@@ -63,7 +77,7 @@ set -euo pipefail
 source /ext3/miniforge3/etc/profile.d/conda.sh
 conda activate dynvision
 cd '$REPO/DiCarlo_experiment'
-python -u train_alignment.py --config '$CONFIG'
+python -u train_student.py --config '$CONFIG' $RESUME_FLAG
 "
 
 # Keep a copy of the job's own log and the code version next to the results.
