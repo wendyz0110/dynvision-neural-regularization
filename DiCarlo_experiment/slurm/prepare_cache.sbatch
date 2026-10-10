@@ -41,7 +41,7 @@ TARGET_CACHE=/scratch/wz2723/dynvision/cache/targets/x4_surrogate
 
 # Target checkpoint. Empty = load_target_model's default (repo trained.pt).
 # Setting the full path is recommended: its hash goes into the manifest.
-CHECKPOINT=""
+CHECKPOINT="/scratch/wz2723/dynvision/DynVision/DiCarlo_experiment/x4_generators_tfb12/x4_pointdepthwise_tfb12/trained.pt"
 
 LAYERS="V1 V4 IT"
 TIMESTEPS="-1"
