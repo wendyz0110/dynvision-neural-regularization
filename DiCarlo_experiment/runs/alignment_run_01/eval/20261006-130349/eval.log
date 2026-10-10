@@ -1,0 +1,36 @@
+2026-10-06 13:03:49,792 | INFO | Run dir: /scratch/wz2723/dynvision/runs/alignment_run_01
+2026-10-06 13:03:49,793 | INFO | Results: /scratch/wz2723/dynvision/runs/alignment_run_01/eval/20261006-130349
+2026-10-06 13:03:49,793 | INFO | Device: cuda | precision: bfloat16
+2026-10-06 13:03:49,811 | INFO | Test images: 3925 (of 3925)
+2026-10-06 13:03:54,983 | INFO | Students: last checkpoints (epoch 199)
+2026-10-06 13:03:57,186 | INFO | IT features: 200704 per image (torch.float32). 9.5 GB per timestep for 3 models -> 9 timestep(s) per pass, 3 pass(es).
+2026-10-06 13:04:56,088 | INFO | Pass 1/3 (timesteps [0, 1, 2, 3, 4, 5, 6, 7, 8]) done in 59 s
+2026-10-06 13:05:54,093 | INFO | Pass 2/3 (timesteps [9, 10, 11, 12, 13, 14, 15, 16, 17]) done in 58 s
+2026-10-06 13:06:49,151 | INFO | Pass 3/3 (timesteps [18, 19]) done in 55 s
+2026-10-06 13:06:51,484 | INFO | Trajectory: 21 checkpoint(s), epochs [-1, 9, 19, 29, 39, 49, 59, 69, 79, 89, 99, 109, 119, 129, 139, 149, 159, 169, 179, 189, 199]
+2026-10-06 13:07:47,256 | INFO | Trajectory epoch -1 done in 37 s
+2026-10-06 13:08:24,432 | INFO | Trajectory epoch 9 done in 37 s
+2026-10-06 13:09:01,537 | INFO | Trajectory epoch 19 done in 37 s
+2026-10-06 13:09:38,697 | INFO | Trajectory epoch 29 done in 37 s
+2026-10-06 13:10:15,858 | INFO | Trajectory epoch 39 done in 37 s
+2026-10-06 13:10:53,012 | INFO | Trajectory epoch 49 done in 37 s
+2026-10-06 13:11:30,097 | INFO | Trajectory epoch 59 done in 37 s
+2026-10-06 13:12:07,251 | INFO | Trajectory epoch 69 done in 37 s
+2026-10-06 13:12:44,351 | INFO | Trajectory epoch 79 done in 37 s
+2026-10-06 13:13:21,469 | INFO | Trajectory epoch 89 done in 37 s
+2026-10-06 13:13:58,674 | INFO | Trajectory epoch 99 done in 37 s
+2026-10-06 13:14:35,856 | INFO | Trajectory epoch 109 done in 37 s
+2026-10-06 13:15:13,038 | INFO | Trajectory epoch 119 done in 37 s
+2026-10-06 13:15:50,307 | INFO | Trajectory epoch 129 done in 37 s
+2026-10-06 13:16:27,496 | INFO | Trajectory epoch 139 done in 37 s
+2026-10-06 13:17:04,708 | INFO | Trajectory epoch 149 done in 37 s
+2026-10-06 13:17:42,001 | INFO | Trajectory epoch 159 done in 37 s
+2026-10-06 13:18:19,068 | INFO | Trajectory epoch 169 done in 37 s
+2026-10-06 13:18:56,046 | INFO | Trajectory epoch 179 done in 37 s
+2026-10-06 13:19:33,233 | INFO | Trajectory epoch 189 done in 37 s
+2026-10-06 13:20:10,343 | INFO | Trajectory epoch 199 done in 37 s
+2026-10-06 13:20:10,358 | INFO | Target test accuracy (final timestep): 0.6413 (expected 0.6700)
+2026-10-06 13:20:10,358 | INFO | CKA aligned_vs_target @ t=19: biased 0.9972 | unbiased 0.9971
+2026-10-06 13:20:10,358 | INFO | CKA control_vs_target @ t=19: biased 0.8944 | unbiased 0.8916
+2026-10-06 13:20:10,358 | INFO | CKA aligned_vs_control @ t=19: biased 0.8886 | unbiased 0.8857
+2026-10-06 13:20:10,358 | INFO | Done in 981 s. Results in /scratch/wz2723/dynvision/runs/alignment_run_01/eval/20261006-130349

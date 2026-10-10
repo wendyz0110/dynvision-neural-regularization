@@ -1,0 +1,42 @@
+{
+  "run_dir": "/scratch/wz2723/dynvision/runs/smoke_01",
+  "student_checkpoint": "last",
+  "student_epoch": 0,
+  "n_test_images": 3925,
+  "alignment_layer": "IT",
+  "alignment_timestep": 19,
+  "target_sanity_check": {
+    "target_test_accuracy_final_timestep": 0.6412738561630249,
+    "expected": 0.67,
+    "difference": -0.028726143836975138
+  },
+  "accuracy_final_timestep": {
+    "target": 0.6412738561630249,
+    "aligned": 0.1806369423866272,
+    "control": 0.26649680733680725
+  },
+  "agreement_with_pseudolabel_final_timestep": {
+    "aligned": 0.27592357993125916,
+    "control": 0.3408917188644409
+  },
+  "cka_at_alignment_timestep": {
+    "aligned_vs_target": {
+      "biased": 0.8671642412635296,
+      "unbiased": 0.8631288278467993
+    },
+    "control_vs_target": {
+      "biased": 0.47777709900307974,
+      "unbiased": 0.4780704731920027
+    },
+    "aligned_vs_control": {
+      "biased": 0.5768698259110643,
+      "unbiased": 0.5795719942635329
+    }
+  },
+  "feature_dimension": 200704,
+  "passes": 3,
+  "runtime_seconds": 272.3,
+  "torch_version": "2.5.1+cu121",
+  "device": "cuda",
+  "precision": "bfloat16"
+}

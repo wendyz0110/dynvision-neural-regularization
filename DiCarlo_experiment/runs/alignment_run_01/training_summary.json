@@ -1,0 +1,7 @@
+{
+  "output_dir": "/scratch/wz2723/dynvision/runs/alignment_run_01",
+  "aligned_best_monitor": "val_total_loss",
+  "aligned_best_value": -6.256059901389552,
+  "control_best_monitor": "val_ce_loss",
+  "control_best_value": 0.33441056974365946
+}

@@ -1,0 +1,7 @@
+{
+  "output_dir": "/scratch/wz2723/dynvision/runs/smoke_01",
+  "aligned_best_monitor": "val_total_loss",
+  "aligned_best_value": -1.0067902915455094,
+  "control_best_monitor": "val_ce_loss",
+  "control_best_value": 1.9203188589281366
+}

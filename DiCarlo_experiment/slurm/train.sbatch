@@ -2,19 +2,23 @@
 # Full training run (train_alignment.py). Usually submitted through submit.sh,
 # which also queues the evaluation to start after this job succeeds.
 #
+# Cluster: NYU burst (Google Cloud), account gm3239, partition c12m85-a100-1
+# (1x A100 40 GB, 12 CPUs, 85 GB RAM per node; the whole node is allocated).
+# The Torch version of this script is in git history (commit d26c953).
+#
 # Direct use:  sbatch train.sbatch [config]      (default: configs/alignment_config.yaml)
 #
 #SBATCH --job-name=dicarlo_train
-#SBATCH --account=torch_pr_628_cds
+#SBATCH --account=gm3239
+#SBATCH --partition=c12m85-a100-1
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=12
 #SBATCH --mem=48G
 #SBATCH --gres=gpu:1
-#SBATCH --constraint="h100|h200"
 #SBATCH --time=20:00:00
 #SBATCH --output=/scratch/wz2723/dynvision/runs/slurm_logs/%x_%j.out
-#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=wz2723@nyu.edu
 
 set -euo pipefail

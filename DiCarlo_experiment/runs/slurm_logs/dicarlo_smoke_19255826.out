@@ -1,0 +1,88 @@
+job 19255826 on gl020.hpc.nyu.edu | start Mon Oct  5 20:29:33 EDT 2026
+config: configs/smoke_config.yaml | run dir: /scratch/wz2723/dynvision/runs/smoke_01
+git commit: 3d2425449db9275cafa7d8b9c29a1e4f1a953298
+Mon Oct  5 20:29:33 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 610.43.02              KMD Version: 610.43.02     CUDA UMD Version: 13.3     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA L40S                    On  |   00000000:59:00.0 Off |                    0 |
+| N/A   30C    P8             33W /  350W |       0MiB /  46068MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+==== TRAINING   Mon Oct 5 20:29:37 EDT 2026
+2026-10-05 20:30:33,777 | INFO | Created data split (seed=2723, val_ratio=0.20)
+2026-10-05 20:30:33,877 | INFO | Split sizes: train=7575 val=1894 test=3925 (10 classes). Saved to /scratch/wz2723/dynvision/runs/smoke_01/data/split.json
+2026-10-05 20:30:33,899 | INFO | Train augmentation: True | batch_size=48 | train batches/epoch=157
+2026-10-05 20:30:33,953 | INFO | Device: cuda
+2026-10-05 20:30:33,953 | INFO | Precision: bfloat16
+2026-10-05 20:30:33,953 | INFO | Alignment layer: IT
+2026-10-05 20:30:33,953 | INFO | Alignment timestep: -1
+2026-10-05 20:30:33,953 | INFO | Pseudo-label timestep: -1
+2026-10-05 20:30:33,953 | INFO | CE timesteps: from 4 to the last
+2026-10-05 20:30:33,953 | INFO | Seed: 2723
+Checkpoint: /scratch/wz2723/dynvision/DynVision/DiCarlo_experiment/x4_generators_tfb12/x4_pointdepthwise_tfb12/trained.pt
+Device:     cuda
+Constructing DyRCNNx4...
+Error determining dtype from parameters: list index out of range. Defaulting to torch.float32.
+Initializing lazy skip/feedback adapters...
+Reading checkpoint...
+[OK] Loaded 67 state_dict entries.
+[OK] Model is in eval mode.
+[OK] Frozen: True
+Error determining dtype from parameters: list index out of range. Defaulting to torch.float32.
+Error determining dtype from parameters: list index out of range. Defaulting to torch.float32.
+Error determining dtype from parameters: list index out of range. Defaulting to torch.float32.
+2026-10-05 20:30:40,763 | INFO | Optimizer: Adam, base lr=0.000173, weight_decay=0.0005, param groups {'recurrence': 'lr=3.46e-05, 90,816 params', 'feedback': 'lr=8.65e-05, 20,840 params', 'regular': 'lr=0.000173, 394,356 params'}
+2026-10-05 20:30:40,764 | INFO | ================================================================================
+2026-10-05 20:30:40,764 | INFO | Epoch 1 / 1
+Traceback (most recent call last):
+  File "/scratch/wz2723/dynvision/DynVision/DiCarlo_experiment/train_alignment.py", line 1568, in <module>
+    main()
+  File "/scratch/wz2723/dynvision/DynVision/DiCarlo_experiment/train_alignment.py", line 1560, in main
+    train_alignment_experiment(
+  File "/scratch/wz2723/dynvision/DynVision/DiCarlo_experiment/train_alignment.py", line 1292, in train_alignment_experiment
+    train_metrics = run_epoch(
+                    ^^^^^^^^^^
+  File "/scratch/wz2723/dynvision/DynVision/DiCarlo_experiment/train_alignment.py", line 942, in run_epoch
+    aligned_logits, aligned_acts = capture_layer_responses(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/wz2723/dynvision/DynVision/DiCarlo_experiment/utils/activation_utils.py", line 157, in capture_layer_responses
+    logits = model(x, store_responses=False)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/ext3/miniforge3/envs/dynvision/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/ext3/miniforge3/envs/dynvision/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/wz2723/dynvision/DynVision/dynvision/base/temporal.py", line 523, in forward
+    x, responses_t = self._forward(
+                     ^^^^^^^^^^^^^^
+  File "/scratch/wz2723/dynvision/DynVision/DiCarlo_experiment/utils/activation_utils.py", line 125, in capturing_forward
+    out, responses_t = original_forward(x_t, *args, **kwargs)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/wz2723/dynvision/DynVision/dynvision/base/temporal.py", line 402, in _forward
+    x = module(x, h)
+        ^^^^^^^^^^^^
+  File "/ext3/miniforge3/envs/dynvision/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/ext3/miniforge3/envs/dynvision/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/wz2723/dynvision/DynVision/dynvision/model_components/dynamics_solver.py", line 87, in forward
+    y = h + self.dt / self.tau * (x - h)
+        ~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 148.00 MiB. GPU 0 has a total capacity of 44.42 GiB of which 96.12 MiB is free. Including non-PyTorch memory, this process has 44.32 GiB memory in use. Of the allocated memory 42.89 GiB is allocated by PyTorch, and 946.89 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)

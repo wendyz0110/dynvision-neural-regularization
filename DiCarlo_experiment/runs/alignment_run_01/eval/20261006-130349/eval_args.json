@@ -1,0 +1,16 @@
+{
+  "run_dir": "/scratch/wz2723/dynvision/runs/alignment_run_01",
+  "checkpoint": "last",
+  "name": null,
+  "data_root": null,
+  "target_checkpoint": null,
+  "device": null,
+  "precision": null,
+  "batch_size": 64,
+  "num_workers": null,
+  "timesteps_per_pass": null,
+  "memory_fraction": 0.6,
+  "skip_trajectory": false,
+  "max_test_images": null,
+  "expected_target_accuracy": 0.67
+}

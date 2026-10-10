@@ -1,0 +1,42 @@
+{
+  "run_dir": "/scratch/wz2723/dynvision/runs/alignment_run_01",
+  "student_checkpoint": "last",
+  "student_epoch": 199,
+  "n_test_images": 3925,
+  "alignment_layer": "IT",
+  "alignment_timestep": 19,
+  "target_sanity_check": {
+    "target_test_accuracy_final_timestep": 0.6412738561630249,
+    "expected": 0.67,
+    "difference": -0.028726143836975138
+  },
+  "accuracy_final_timestep": {
+    "target": 0.6412738561630249,
+    "aligned": 0.606624186038971,
+    "control": 0.6101911067962646
+  },
+  "agreement_with_pseudolabel_final_timestep": {
+    "aligned": 0.8270063400268555,
+    "control": 0.8517197370529175
+  },
+  "cka_at_alignment_timestep": {
+    "aligned_vs_target": {
+      "biased": 0.997230988011223,
+      "unbiased": 0.9971491405177112
+    },
+    "control_vs_target": {
+      "biased": 0.8943716157141972,
+      "unbiased": 0.8915539987638537
+    },
+    "aligned_vs_control": {
+      "biased": 0.8885903360415284,
+      "unbiased": 0.885664979840842
+    }
+  },
+  "feature_dimension": 200704,
+  "passes": 3,
+  "runtime_seconds": 980.6,
+  "torch_version": "2.5.1+cu121",
+  "device": "cuda",
+  "precision": "bfloat16"
+}

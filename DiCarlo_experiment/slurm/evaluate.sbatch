@@ -7,17 +7,23 @@
 # Every run writes a new folder <run_dir>/eval/<date-time>/; earlier
 # evaluations are never overwritten.
 #
+# Cluster: NYU burst (Google Cloud), account gm3239, partition c12m85-a100-1
+# (1x A100 40 GB, 12 CPUs, 85 GB RAM per node; the whole node is allocated).
+# The Torch version of this script is in git history (commit d26c953).
+# NOTE: on Torch (H200) evaluation peaked at ~91 GB GPU memory, so it will
+# not fit on a 40 GB A100 until the evaluation batch size can be lowered.
+#
 #SBATCH --job-name=dicarlo_eval
-#SBATCH --account=torch_pr_628_cds
+#SBATCH --account=gm3239
+#SBATCH --partition=c12m85-a100-1
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=12
 #SBATCH --mem=48G
 #SBATCH --gres=gpu:1
-#SBATCH --constraint="h100|h200"
 #SBATCH --time=01:30:00
 #SBATCH --output=/scratch/wz2723/dynvision/runs/slurm_logs/%x_%j.out
-#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=wz2723@nyu.edu
 
 set -euo pipefail

@@ -1,0 +1,52 @@
+2026-10-05 22:24:41,726 | INFO | Created data split (seed=2723, val_ratio=0.20)
+2026-10-05 22:24:43,330 | INFO | Split sizes: train=7575 val=1894 test=3925 (10 classes). Saved to /scratch/wz2723/dynvision/runs/smoke_01/data/split.json
+2026-10-05 22:24:43,357 | INFO | Train augmentation: True | batch_size=48 | train batches/epoch=157
+2026-10-05 22:24:43,400 | INFO | Device: cuda
+2026-10-05 22:24:43,401 | INFO | Precision: bfloat16
+2026-10-05 22:24:43,401 | INFO | Alignment layer: IT
+2026-10-05 22:24:43,401 | INFO | Alignment timestep: -1
+2026-10-05 22:24:43,401 | INFO | Pseudo-label timestep: -1
+2026-10-05 22:24:43,401 | INFO | CE timesteps: from 4 to the last
+2026-10-05 22:24:43,401 | INFO | Seed: 2723
+2026-10-05 22:24:49,390 | INFO | DynVision response storage disabled for target, aligned, control.
+2026-10-05 22:24:49,414 | INFO | Optimizer: Adam, base lr=0.000173, weight_decay=0.0005, param groups {'recurrence': 'lr=3.46e-05, 90,816 params', 'feedback': 'lr=8.65e-05, 20,840 params', 'regular': 'lr=0.000173, 394,356 params'}
+2026-10-05 22:24:49,415 | INFO | ================================================================================
+2026-10-05 22:24:49,415 | INFO | Epoch 1 / 1
+2026-10-05 22:25:00,435 | INFO | epoch=0 batch=5 | aligned total=0.63096 ce=2.29533 align=-1.66437 batch_cka=0.81069 agree=0.1875 | control ce=2.28684 batch_cka=0.73469 agree=0.1458
+2026-10-05 22:25:07,609 | INFO | epoch=0 batch=10 | aligned total=0.66022 ce=2.29669 align=-1.63648 batch_cka=0.80534 agree=0.0625 | control ce=2.29688 batch_cka=0.63563 agree=0.0625
+2026-10-05 22:25:14,783 | INFO | epoch=0 batch=15 | aligned total=0.54581 ce=2.28304 align=-1.73723 batch_cka=0.82399 agree=0.2292 | control ce=2.26296 batch_cka=0.65452 agree=0.1250
+2026-10-05 22:25:21,959 | INFO | epoch=0 batch=20 | aligned total=-0.13103 ce=2.29143 align=-2.42246 batch_cka=0.91130 agree=0.1458 | control ce=2.28097 batch_cka=0.67613 agree=0.1667
+2026-10-05 22:25:29,129 | INFO | epoch=0 batch=25 | aligned total=0.45613 ce=2.28601 align=-1.82988 batch_cka=0.83957 agree=0.0833 | control ce=2.24598 batch_cka=0.50957 agree=0.0833
+2026-10-05 22:25:36,303 | INFO | epoch=0 batch=30 | aligned total=-0.18572 ce=2.29671 align=-2.48243 batch_cka=0.91646 agree=0.1875 | control ce=2.28717 batch_cka=0.64188 agree=0.2083
+2026-10-05 22:25:43,476 | INFO | epoch=0 batch=35 | aligned total=-0.33519 ce=2.28034 align=-2.61554 batch_cka=0.92687 agree=0.1458 | control ce=2.23149 batch_cka=0.64095 agree=0.1875
+2026-10-05 22:25:50,649 | INFO | epoch=0 batch=40 | aligned total=-0.37238 ce=2.28597 align=-2.65835 batch_cka=0.92994 agree=0.0417 | control ce=2.23333 batch_cka=0.61138 agree=0.1250
+2026-10-05 22:25:57,824 | INFO | epoch=0 batch=45 | aligned total=-0.69476 ce=2.29767 align=-2.99243 batch_cka=0.94983 agree=0.0625 | control ce=2.25656 batch_cka=0.55765 agree=0.2917
+2026-10-05 22:26:05,005 | INFO | epoch=0 batch=50 | aligned total=-0.72630 ce=2.29962 align=-3.02592 batch_cka=0.95149 agree=0.1250 | control ce=2.26370 batch_cka=0.55887 agree=0.2083
+2026-10-05 22:26:12,178 | INFO | epoch=0 batch=55 | aligned total=-0.99284 ce=2.25115 align=-3.24399 batch_cka=0.96099 agree=0.1250 | control ce=2.13936 batch_cka=0.63305 agree=0.3542
+2026-10-05 22:26:19,349 | INFO | epoch=0 batch=60 | aligned total=-0.53147 ce=2.27549 align=-2.80696 batch_cka=0.93961 agree=0.1458 | control ce=2.11086 batch_cka=0.53758 agree=0.2917
+2026-10-05 22:26:26,533 | INFO | epoch=0 batch=65 | aligned total=-0.55786 ce=2.27743 align=-2.83528 batch_cka=0.94130 agree=0.1458 | control ce=2.22389 batch_cka=0.55356 agree=0.1667
+2026-10-05 22:26:33,712 | INFO | epoch=0 batch=70 | aligned total=-0.64240 ce=2.29058 align=-2.93298 batch_cka=0.94676 agree=0.1458 | control ce=2.13788 batch_cka=0.54203 agree=0.2708
+2026-10-05 22:26:40,883 | INFO | epoch=0 batch=75 | aligned total=-0.77031 ce=2.28660 align=-3.05691 batch_cka=0.95297 agree=0.1458 | control ce=2.11618 batch_cka=0.54022 agree=0.3333
+2026-10-05 22:26:48,078 | INFO | epoch=0 batch=80 | aligned total=-0.83106 ce=2.25743 align=-3.08849 batch_cka=0.95443 agree=0.2083 | control ce=2.10476 batch_cka=0.58920 agree=0.2500
+2026-10-05 22:26:55,255 | INFO | epoch=0 batch=85 | aligned total=-0.66278 ce=2.24134 align=-2.90412 batch_cka=0.94520 agree=0.2292 | control ce=1.99341 batch_cka=0.54239 agree=0.3958
+2026-10-05 22:27:02,431 | INFO | epoch=0 batch=90 | aligned total=-0.95537 ce=2.28333 align=-3.23869 batch_cka=0.96078 agree=0.1042 | control ce=2.25839 batch_cka=0.55760 agree=0.0625
+2026-10-05 22:27:09,601 | INFO | epoch=0 batch=95 | aligned total=-1.37342 ce=2.29165 align=-3.66507 batch_cka=0.97440 agree=0.1667 | control ce=2.16326 batch_cka=0.52005 agree=0.2708
+2026-10-05 22:27:16,777 | INFO | epoch=0 batch=100 | aligned total=-0.96241 ce=2.28217 align=-3.24457 batch_cka=0.96101 agree=0.1875 | control ce=2.07736 batch_cka=0.58192 agree=0.2083
+2026-10-05 22:27:23,950 | INFO | epoch=0 batch=105 | aligned total=-0.76540 ce=2.26311 align=-3.02851 batch_cka=0.95161 agree=0.3125 | control ce=2.03417 batch_cka=0.54936 agree=0.3958
+2026-10-05 22:27:31,124 | INFO | epoch=0 batch=110 | aligned total=-0.64574 ce=2.27628 align=-2.92201 batch_cka=0.94617 agree=0.1458 | control ce=2.00281 batch_cka=0.53284 agree=0.2917
+2026-10-05 22:27:38,299 | INFO | epoch=0 batch=115 | aligned total=-0.63059 ce=2.27930 align=-2.90989 batch_cka=0.94552 agree=0.1667 | control ce=2.00471 batch_cka=0.64788 agree=0.3750
+2026-10-05 22:27:45,473 | INFO | epoch=0 batch=120 | aligned total=-1.06245 ce=2.26500 align=-3.32745 batch_cka=0.96412 agree=0.3333 | control ce=2.01006 batch_cka=0.44261 agree=0.3125
+2026-10-05 22:27:52,652 | INFO | epoch=0 batch=125 | aligned total=-0.72307 ce=2.27361 align=-2.99668 batch_cka=0.95005 agree=0.2500 | control ce=1.96854 batch_cka=0.65016 agree=0.3125
+2026-10-05 22:27:59,830 | INFO | epoch=0 batch=130 | aligned total=-0.81602 ce=2.29312 align=-3.10914 batch_cka=0.95536 agree=0.2500 | control ce=1.91424 batch_cka=0.60768 agree=0.4167
+2026-10-05 22:28:07,004 | INFO | epoch=0 batch=135 | aligned total=-0.90740 ce=2.27089 align=-3.17830 batch_cka=0.95834 agree=0.2500 | control ce=2.10456 batch_cka=0.43245 agree=0.2292
+2026-10-05 22:28:14,187 | INFO | epoch=0 batch=140 | aligned total=-1.07439 ce=2.28137 align=-3.35576 batch_cka=0.96512 agree=0.1458 | control ce=2.02855 batch_cka=0.55562 agree=0.2292
+2026-10-05 22:28:21,359 | INFO | epoch=0 batch=145 | aligned total=-1.17501 ce=2.26197 align=-3.43699 batch_cka=0.96784 agree=0.2708 | control ce=1.99453 batch_cka=0.55364 agree=0.2292
+2026-10-05 22:28:28,535 | INFO | epoch=0 batch=150 | aligned total=-0.85759 ce=2.22164 align=-3.07923 batch_cka=0.95401 agree=0.3542 | control ce=1.84919 batch_cka=0.71889 agree=0.3958
+2026-10-05 22:28:35,712 | INFO | epoch=0 batch=155 | aligned total=-0.85775 ce=2.27684 align=-3.13458 batch_cka=0.95648 agree=0.1250 | control ce=2.00246 batch_cka=0.59634 agree=0.3333
+2026-10-05 22:29:05,423 | INFO | VAL aligned: total=-1.00679 ce=2.24649 align=-3.25328 batch_cka=0.95819 agreement=0.2730
+2026-10-05 22:29:05,424 | INFO | VAL control: ce=1.92032 batch_cka=0.63449 agreement=0.3427
+2026-10-05 22:29:05,455 | INFO | Saved periodic checkpoints for epoch 0.
+2026-10-05 22:29:05,481 | INFO | Saved new aligned_best.pt (val_total_loss=-1.006790)
+2026-10-05 22:29:05,514 | INFO | Saved new control_best.pt (val_ce_loss=1.920319)
+2026-10-05 22:29:05,565 | INFO | Training complete.
+2026-10-05 22:29:05,565 | INFO | Outputs: /scratch/wz2723/dynvision/runs/smoke_01

@@ -1,0 +1,60 @@
+job 19256730 on gh112.hpc.nyu.edu | start Mon Oct  5 21:11:13 EDT 2026
+config: configs/smoke_config.yaml | run dir: /scratch/wz2723/dynvision/runs/smoke_01
+git commit: 7224f32c416069c416825469c7587ce30e7d6d02
+Mon Oct  5 21:11:14 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 610.43.02              KMD Version: 610.43.02     CUDA UMD Version: 13.3     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA H200                    On  |   00000000:87:00.0 Off |                    0 |
+| N/A   21C    P0             78W /  700W |       0MiB / 143771MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+==== TRAINING   Mon Oct 5 21:11:16 EDT 2026
+2026-10-05 21:11:58,338 | INFO | Created data split (seed=2723, val_ratio=0.20)
+2026-10-05 21:11:58,473 | INFO | Split sizes: train=7575 val=1894 test=3925 (10 classes). Saved to /scratch/wz2723/dynvision/runs/smoke_01/data/split.json
+2026-10-05 21:11:58,500 | INFO | Train augmentation: True | batch_size=48 | train batches/epoch=157
+2026-10-05 21:11:58,542 | INFO | Device: cuda
+2026-10-05 21:11:58,542 | INFO | Precision: bfloat16
+2026-10-05 21:11:58,542 | INFO | Alignment layer: IT
+2026-10-05 21:11:58,542 | INFO | Alignment timestep: -1
+2026-10-05 21:11:58,543 | INFO | Pseudo-label timestep: -1
+2026-10-05 21:11:58,543 | INFO | CE timesteps: from 4 to the last
+2026-10-05 21:11:58,543 | INFO | Seed: 2723
+Checkpoint: /scratch/wz2723/dynvision/DynVision/DiCarlo_experiment/x4_generators_tfb12/x4_pointdepthwise_tfb12/trained.pt
+Device:     cuda
+Constructing DyRCNNx4...
+Error determining dtype from parameters: list index out of range. Defaulting to torch.float32.
+Initializing lazy skip/feedback adapters...
+Reading checkpoint...
+[OK] Loaded 67 state_dict entries.
+[OK] Model is in eval mode.
+[OK] Frozen: True
+Error determining dtype from parameters: list index out of range. Defaulting to torch.float32.
+Error determining dtype from parameters: list index out of range. Defaulting to torch.float32.
+Error determining dtype from parameters: list index out of range. Defaulting to torch.float32.
+2026-10-05 21:12:05,029 | INFO | Optimizer: Adam, base lr=0.000173, weight_decay=0.0005, param groups {'recurrence': 'lr=3.46e-05, 90,816 params', 'feedback': 'lr=8.65e-05, 20,840 params', 'regular': 'lr=0.000173, 394,356 params'}
+2026-10-05 21:12:05,030 | INFO | ================================================================================
+2026-10-05 21:12:05,030 | INFO | Epoch 1 / 1
+2026-10-05 21:14:57,270 | INFO | epoch=0 batch=5 | aligned total=0.62857 ce=2.29508 align=-1.66651 batch_cka=0.81110 agree=0.1875 | control ce=2.28695 batch_cka=0.73487 agree=0.1458
+2026-10-05 21:17:46,332 | INFO | epoch=0 batch=10 | aligned total=0.67329 ce=2.29685 align=-1.62357 batch_cka=0.80281 agree=0.0625 | control ce=2.29547 batch_cka=0.63393 agree=0.0417
+2026-10-05 21:20:33,979 | INFO | epoch=0 batch=15 | aligned total=0.55300 ce=2.28257 align=-1.72958 batch_cka=0.82264 agree=0.1250 | control ce=2.25437 batch_cka=0.65295 agree=0.1250
+2026-10-05 21:23:21,948 | INFO | epoch=0 batch=20 | aligned total=-0.11052 ce=2.29123 align=-2.40174 batch_cka=0.90944 agree=0.1458 | control ce=2.27943 batch_cka=0.67524 agree=0.2083
+2026-10-05 21:26:09,567 | INFO | epoch=0 batch=25 | aligned total=0.47224 ce=2.28371 align=-1.81147 batch_cka=0.83659 agree=0.0833 | control ce=2.24336 batch_cka=0.51247 agree=0.0833
+2026-10-05 21:29:03,843 | INFO | epoch=0 batch=30 | aligned total=-0.15254 ce=2.29649 align=-2.44903 batch_cka=0.91362 agree=0.1875 | control ce=2.28608 batch_cka=0.64664 agree=0.2083
+2026-10-05 21:31:57,539 | INFO | epoch=0 batch=35 | aligned total=-0.31808 ce=2.27863 align=-2.59670 batch_cka=0.92548 agree=0.1458 | control ce=2.22293 batch_cka=0.63892 agree=0.1875
+2026-10-05 21:34:51,834 | INFO | epoch=0 batch=40 | aligned total=-0.36395 ce=2.28377 align=-2.64773 batch_cka=0.92919 agree=0.0417 | control ce=2.22890 batch_cka=0.60057 agree=0.0833
+2026-10-05 21:37:47,192 | INFO | epoch=0 batch=45 | aligned total=-0.65962 ce=2.29657 align=-2.95619 batch_cka=0.94798 agree=0.0625 | control ce=2.24947 batch_cka=0.54405 agree=0.2292
+2026-10-05 21:40:41,987 | INFO | epoch=0 batch=50 | aligned total=-0.74025 ce=2.30114 align=-3.04139 batch_cka=0.95223 agree=0.1250 | control ce=2.24155 batch_cka=0.56497 agree=0.2500
+[2026-10-05T21:43:12.765] error: *** JOB 19256730 ON gh112 CANCELLED AT 2026-10-05T21:43:12 DUE to SIGNAL Terminated ***

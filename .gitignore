@@ -231,3 +231,10 @@ cython_debug/
 # DiCarlo experiment
 DiCarlo_experiment/outputs/
 DiCarlo_experiment/**/__pycache__/
+
+# DiCarlo experiment results (copied from the cluster):
+# keep small text results in git, never checkpoints
+DiCarlo_experiment/runs/**/checkpoints/
+!DiCarlo_experiment/runs/**/*.csv
+!DiCarlo_experiment/runs/**/logs/
+!DiCarlo_experiment/runs/**/*.log

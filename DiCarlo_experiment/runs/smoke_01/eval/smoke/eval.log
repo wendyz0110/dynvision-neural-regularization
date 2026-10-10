@@ -1,0 +1,17 @@
+2026-10-05 22:29:35,656 | INFO | Run dir: /scratch/wz2723/dynvision/runs/smoke_01
+2026-10-05 22:29:35,656 | INFO | Results: /scratch/wz2723/dynvision/runs/smoke_01/eval/smoke
+2026-10-05 22:29:35,656 | INFO | Device: cuda | precision: bfloat16
+2026-10-05 22:29:35,667 | INFO | Test images: 3925 (of 3925)
+2026-10-05 22:29:37,424 | INFO | Students: last checkpoints (epoch 0)
+2026-10-05 22:29:38,706 | INFO | IT features: 200704 per image (torch.float32). 9.5 GB per timestep for 3 models -> 9 timestep(s) per pass, 3 pass(es).
+2026-10-05 22:30:38,121 | INFO | Pass 1/3 (timesteps [0, 1, 2, 3, 4, 5, 6, 7, 8]) done in 59 s
+2026-10-05 22:31:36,754 | INFO | Pass 2/3 (timesteps [9, 10, 11, 12, 13, 14, 15, 16, 17]) done in 59 s
+2026-10-05 22:32:32,286 | INFO | Pass 3/3 (timesteps [18, 19]) done in 56 s
+2026-10-05 22:32:34,339 | INFO | Trajectory: 2 checkpoint(s), epochs [-1, 0]
+2026-10-05 22:33:30,516 | INFO | Trajectory epoch -1 done in 38 s
+2026-10-05 22:34:07,899 | INFO | Trajectory epoch 0 done in 37 s
+2026-10-05 22:34:07,913 | INFO | Target test accuracy (final timestep): 0.6413 (expected 0.6700)
+2026-10-05 22:34:07,913 | INFO | CKA aligned_vs_target @ t=19: biased 0.8672 | unbiased 0.8631
+2026-10-05 22:34:07,913 | INFO | CKA control_vs_target @ t=19: biased 0.4778 | unbiased 0.4781
+2026-10-05 22:34:07,913 | INFO | CKA aligned_vs_control @ t=19: biased 0.5769 | unbiased 0.5796
+2026-10-05 22:34:07,913 | INFO | Done in 272 s. Results in /scratch/wz2723/dynvision/runs/smoke_01/eval/smoke
