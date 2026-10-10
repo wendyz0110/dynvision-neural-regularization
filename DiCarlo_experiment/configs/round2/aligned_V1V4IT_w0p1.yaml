@@ -15,7 +15,7 @@ cache:
 data:
   root: "/scratch/wz2723/dynvision/data/imagenette2-320"
   # Same train/val images as run_01 and as every other round-2 run.
-  split_file: "/scratch/wz2723/dynvision/runs/alignment_run_01/data/split.json"
+  split_file: "/scratch/wz2723/dynvision/DynVision/DiCarlo_experiment/runs/alignment_run_01/data/split.json"
   batch_size: 48
   input_timesteps: 20
   shuffle_seed: 2723          # same in every compared run -> identical batches
