@@ -16,7 +16,7 @@ data:
   root: "/scratch/wz2723/dynvision/data/imagenette2-320"
   # Same train/val images as run_01 and as every other round-2 run.
   split_file: "/scratch/wz2723/dynvision/DynVision/DiCarlo_experiment/runs/alignment_run_01/data/split.json"
-  batch_size: 48
+  batch_size: 32
   input_timesteps: 20
   shuffle_seed: 2723          # same in every compared run -> identical batches
   num_workers: 8              # cache-reading workers (node has 12 CPUs)
@@ -38,7 +38,7 @@ alignment:
 
 optimization:
   epochs: 200
-  learning_rate: 1.73e-4         # 2e-4 * sqrt(48 / 64)
+  learning_rate: 1.41e-4         # 2e-4 * sqrt(32 / 64)
   weight_decay: 5.0e-4
   lr_group_factors: {recurrence: 0.2, feedback: 0.5}
   accumulate_grad_batches: 1
