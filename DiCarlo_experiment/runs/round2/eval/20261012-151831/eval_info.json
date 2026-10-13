@@ -1,0 +1,107 @@
+{
+  "args": {
+    "runs": [
+      "/scratch/wz2723/dynvision/runs/round2/control",
+      "/scratch/wz2723/dynvision/runs/round2/aligned_IT_w1",
+      "/scratch/wz2723/dynvision/runs/round2/aligned_IT_w0p1",
+      "/scratch/wz2723/dynvision/runs/round2/aligned_V1V4IT_w0p1"
+    ],
+    "checkpoint": "last",
+    "out_dir": null,
+    "layers": [
+      "V1",
+      "V4",
+      "IT"
+    ],
+    "device": "cuda",
+    "precision": null,
+    "batch_size": 64,
+    "num_workers": 8,
+    "memory_fraction": 0.55,
+    "max_grams_per_group": 16,
+    "max_test_images": null
+  },
+  "precision": "bfloat16",
+  "runs": [
+    {
+      "name": "control",
+      "dir": "/scratch/wz2723/dynvision/runs/round2/control",
+      "role": "control",
+      "description": "CE only (no alignment term)",
+      "loss_layers": [],
+      "loss_weights": {},
+      "is_control": true,
+      "checkpoint": "/scratch/wz2723/dynvision/runs/round2/control/checkpoints/last.pt",
+      "epoch": 199
+    },
+    {
+      "name": "aligned_IT_w1",
+      "dir": "/scratch/wz2723/dynvision/runs/round2/aligned_IT_w1",
+      "role": "aligned",
+      "description": "CE + 1.0 * log(1 - CKA_IT); run_01's weight, new pipeline",
+      "loss_layers": [
+        "IT_t19"
+      ],
+      "loss_weights": {
+        "IT_t19": 1.0
+      },
+      "is_control": false,
+      "checkpoint": "/scratch/wz2723/dynvision/runs/round2/aligned_IT_w1/checkpoints/last.pt",
+      "epoch": 199
+    },
+    {
+      "name": "aligned_IT_w0p1",
+      "dir": "/scratch/wz2723/dynvision/runs/round2/aligned_IT_w0p1",
+      "role": "aligned",
+      "description": "CE + 0.1 * log(1 - CKA_IT)",
+      "loss_layers": [
+        "IT_t19"
+      ],
+      "loss_weights": {
+        "IT_t19": 0.1
+      },
+      "is_control": false,
+      "checkpoint": "/scratch/wz2723/dynvision/runs/round2/aligned_IT_w0p1/checkpoints/last.pt",
+      "epoch": 199
+    },
+    {
+      "name": "aligned_V1V4IT_w0p1",
+      "dir": "/scratch/wz2723/dynvision/runs/round2/aligned_V1V4IT_w0p1",
+      "role": "aligned",
+      "description": "CE + 0.1 * sum over V1, V4, IT of log(1 - CKA)",
+      "loss_layers": [
+        "V1_t19",
+        "V4_t19",
+        "IT_t19"
+      ],
+      "loss_weights": {
+        "V1_t19": 0.1,
+        "V4_t19": 0.1,
+        "IT_t19": 0.1
+      },
+      "is_control": false,
+      "checkpoint": "/scratch/wz2723/dynvision/runs/round2/aligned_V1V4IT_w0p1/checkpoints/last.pt",
+      "epoch": 199
+    }
+  ],
+  "layers": [
+    "V1",
+    "V4",
+    "IT"
+  ],
+  "ce_first_timestep": 4,
+  "data": {
+    "image_cache": "/scratch/wz2723/dynvision/cache/imagenette_images",
+    "target_cache": "/scratch/wz2723/dynvision/cache/targets/x4_surrogate",
+    "paths_sha256_16": "1d3b7e4e6d4af6b7",
+    "target_checkpoint": "/scratch/wz2723/dynvision/DynVision/DiCarlo_experiment/x4_generators_tfb12/x4_pointdepthwise_tfb12/trained.pt",
+    "target_checkpoint_sha256_16": "36e08e17343be0d9",
+    "target_precision": "float32"
+  },
+  "feature_sizes": {
+    "V1": 1806336,
+    "V4": 379456,
+    "IT": 200704
+  },
+  "torch_version": "2.5.1+cu121"
+}

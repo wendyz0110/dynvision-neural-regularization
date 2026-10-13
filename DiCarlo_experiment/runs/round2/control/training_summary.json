@@ -1,0 +1,6 @@
+{
+  "output_dir": "/scratch/wz2723/dynvision/runs/round2/control",
+  "role": "control",
+  "monitor": "val_total_loss",
+  "best_value": 0.3434115971744438
+}

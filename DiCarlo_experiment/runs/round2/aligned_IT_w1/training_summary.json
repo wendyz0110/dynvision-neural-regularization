@@ -1,0 +1,6 @@
+{
+  "output_dir": "/scratch/wz2723/dynvision/runs/round2/aligned_IT_w1",
+  "role": "aligned",
+  "monitor": "val_total_loss",
+  "best_value": -6.530313300482197
+}

@@ -1,0 +1,47 @@
+{
+  "role": "aligned",
+  "description": "CE + 0.1 * sum over V1, V4, IT of log(1 - CKA)",
+  "git_commit": "e22c452",
+  "loss_layers": [
+    {
+      "name": "V1",
+      "timestep": 19,
+      "weight": 0.1,
+      "key": "V1_t19"
+    },
+    {
+      "name": "V4",
+      "timestep": 19,
+      "weight": 0.1,
+      "key": "V4_t19"
+    },
+    {
+      "name": "IT",
+      "timestep": 19,
+      "weight": 0.1,
+      "key": "IT_t19"
+    }
+  ],
+  "monitor_layers": [],
+  "data": {
+    "image_cache": "/scratch/wz2723/dynvision/cache/imagenette_images",
+    "target_cache": "/scratch/wz2723/dynvision/cache/targets/x4_surrogate",
+    "paths_sha256_16": "1d3b7e4e6d4af6b7",
+    "target_checkpoint": "/scratch/wz2723/dynvision/DynVision/DiCarlo_experiment/x4_generators_tfb12/x4_pointdepthwise_tfb12/trained.pt",
+    "target_checkpoint_sha256_16": "36e08e17343be0d9",
+    "target_precision": "float32"
+  },
+  "split_counts": {
+    "train": 7575,
+    "val": 1894
+  },
+  "pseudo_label_vs_gt": {
+    "train": 0.667062706270627,
+    "val": 0.6615628299894404
+  },
+  "student_init": {
+    "path": "/scratch/wz2723/dynvision/cache/student_init/x4_seed2723.pt",
+    "sha256_16": "64187eada0f65563",
+    "seed": 2723
+  }
+}
