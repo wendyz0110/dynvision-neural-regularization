@@ -1,0 +1,67 @@
+# Round 3 target: trained from scratch on ground-truth labels.
+# Architecture = round 2 student architecture (utils/student_model_utils.py
+# DEFAULT_STUDENT_KWARGS == utils/target_model_utils.py build_target_model()).
+# Recipe = round 2 student recipe, with the three round 3 changes that the
+# students will also get: AdamW (wd 0.01), max_grad_norm 500, cosine T_max 200.
+# Spec sheet: round3_target_config.md.
+
+experiment:
+  name: "target_r3"
+  description: "DyRCNNx4 target, ground-truth labels, round 2 student architecture and recipe + R3 changes"
+
+data:
+  image_dir: "/scratch/wz2723/dynvision/cache/imagenette_images"
+  split_file: "/scratch/wz2723/dynvision/DynVision/DiCarlo_experiment/runs/alignment_run_01/data/split.json"
+  batch_size: 32
+  shuffle_seed: 7000
+  num_workers: 8                 # node has 12 CPUs
+
+model:
+  model_class: "dynvision.models:DyRCNNx4"
+  kwargs:
+    n_classes: 10
+    input_dims: [1, 3, 224, 224]
+    n_timesteps: 20
+    dt: 2
+    tau: 9
+    t_feedforward: 0
+    t_recurrence: 6              # ms (3 steps)
+    t_feedback: 12               # ms (6 steps)
+    t_skip: 0
+    recurrence_type: "pointdepthwise"
+    recurrence_target: "output"
+    skip: true
+    feedback: "add"
+  init_seed: 7000                # students use 2723
+  initialize_lazy: true
+
+loss:
+  ce_first_timestep: 4           # CE over t4..t19 (8 ms reaction time)
+
+optimization:
+  epochs: 200
+  optimizer: "adamw"             # [R3-SHARED] round 2: adam
+  learning_rate: 1.41e-4         # 2e-4 * sqrt(32 / 64)
+  weight_decay: 0.01             # [R3-SHARED] decoupled; round 2: 5e-4 coupled
+  betas: [0.9, 0.999]
+  eps: 1.0e-8
+  lr_group_factors: {recurrence: 0.2, feedback: 0.5}
+  accumulate_grad_batches: 1
+  max_grad_norm: 500.0           # [R3-SHARED] round 2: 1.0
+  scheduler: "cosine"
+  cosine_t_max: 200              # [R3-SHARED] round 2: 500
+
+runtime:
+  device: "cuda"
+  precision: "bfloat16"
+  output_dir: "/scratch/wz2723/dynvision/runs/round3/target_r3"
+  log_every_n_steps: 20
+  deterministic_cudnn: false
+
+checkpoint:
+  select: "best"                 # the target used downstream
+  monitor: "val_ce_loss"
+  mode: "min"
+  save_every_n_epochs: 10
+  eval_train_every_n_epochs: 10  # train-set accuracy in eval mode (memorization check)
+  check_round2_loader: true      # best.pt / last.pt must load with load_target_model
