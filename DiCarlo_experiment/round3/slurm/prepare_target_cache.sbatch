@@ -16,6 +16,12 @@
 # Optional 2nd / 3rd arguments override the target run folder and the cache folder:
 #   sbatch ... full <target run dir> <target cache dir>
 #
+# Which activations to store: V1, V4, IT at the last timestep by default.
+# To ADD more to an existing cache (existing files are kept, compatibility is
+# checked), set CACHE_LAYERS / CACHE_TIMESTEPS (timesteps separated by ":"):
+#   sbatch --export=ALL,CACHE_LAYERS=IT,CACHE_TIMESTEPS=2:6:12 \
+#          DiCarlo_experiment/round3/slurm/prepare_target_cache.sbatch full
+#
 #   dry_run: runs a few batches, prints shapes, projected size and time, writes nothing
 #   full:    writes the cache
 #
@@ -43,8 +49,10 @@ OVERLAY=/scratch/wz2723/dynvision/overlay-15GB-500K.ext3
 SIF=/share/apps/images/cuda12.1.1-cudnn8.9.0-devel-ubuntu22.04.2.sif
 IMAGE_CACHE=/scratch/wz2723/dynvision/cache/imagenette_images
 
-LAYERS="V1 V4 IT"
-TIMESTEPS="-1"
+LAYERS=${CACHE_LAYERS:-"V1 V4 IT"}
+TIMESTEPS=${CACHE_TIMESTEPS:-"-1"}
+LAYERS=${LAYERS//:/ }
+TIMESTEPS=${TIMESTEPS//:/ }
 
 case "$MODE" in
     dry_run) TARGET_FLAGS="--dry_run" ;;
@@ -69,6 +77,7 @@ fi
 echo "job $SLURM_JOB_ID on $(hostname) | start $(date) | mode: $MODE"
 echo "target run: $TARGET_RUN | checkpoint: $CHECKPOINT"
 echo "image cache: $IMAGE_CACHE | target cache: $TARGET_CACHE"
+echo "layers: $LAYERS | timesteps: $TIMESTEPS"
 echo "git commit: $(git -C "$REPO" rev-parse HEAD)"
 if [ -n "$(git -C "$REPO" status --porcelain --untracked-files=no)" ]; then
     echo "WARNING: repo has uncommitted changes:"
