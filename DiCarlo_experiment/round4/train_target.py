@@ -5,6 +5,10 @@ Round 4 = round 3's script plus:
   * the initial weights are measured BEFORE training (same evaluate() as every
     epoch) and written as the first row of metrics.csv (epoch = -1,
     epochs_completed = 0); the initial weights are saved as checkpoints/init.pt.
+  * optional data augmentation of the TRAINING batches (augmentation.transforms,
+    torchvision.transforms.v2 strings in DynVision's format, e.g. its
+    Imagenette preset). Validation, train-set evaluation, the target cache and
+    everything downstream always use the un-augmented images.
   * metrics.csv has an `epochs_completed` column: 0 = initial weights,
     k = after k training epochs. Plot against this column.
   * load_trained_target(): rebuilds ANY trained target (any model class) from
@@ -19,7 +23,7 @@ except what DynVision itself fills in for arguments the YAML does not
 give -- and those effective values are written to the model card.
 
 Data: the uint8 image cache (prepare_images.py) + a split.json. Ground-truth
-labels come from the image cache manifest. No augmentation. The target
+labels come from the image cache manifest. Augmentation: see AugmentationConfig. The target
 cache (prepare_targets.py) is NOT needed: this script is what produces the
 checkpoint that prepare_targets.py later reads.
 
@@ -51,6 +55,7 @@ Usage (from DiCarlo_experiment/):
 from __future__ import annotations
 
 import argparse
+import ast
 import csv
 import hashlib
 import importlib
@@ -102,6 +107,18 @@ class DataConfig:
     batch_size: int = 32
     shuffle_seed: int = 7000            # train order = permutation(shuffle_seed + epoch)
     num_workers: int = 8
+
+
+@dataclass
+class AugmentationConfig:
+    # Applied to TRAINING batches only, per image, on the cached (already
+    # Resize(256) + CenterCrop(224)) uint8 images, on the GPU; the augmented
+    # image is then shown at every timestep. Strings in DynVision's format:
+    # a torchvision.transforms.v2 class with literal arguments, e.g.
+    # "RandomRotation(10)". [] = no augmentation (round 3).
+    # Random draws come from torch's global RNG (seeded by model.init_seed,
+    # saved in resume.pt).
+    transforms: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -174,6 +191,7 @@ class CheckpointConfig:
 class TargetConfig:
     experiment: ExperimentInfo = field(default_factory=ExperimentInfo)
     data: DataConfig = field(default_factory=DataConfig)
+    augmentation: AugmentationConfig = field(default_factory=AugmentationConfig)
     model: ModelConfig = field(default_factory=ModelConfig)
     loss: LossConfig = field(default_factory=LossConfig)
     optimization: OptimizationConfig = field(default_factory=OptimizationConfig)
@@ -520,6 +538,45 @@ class ImageLoader:
 
 
 # =============================================================================
+# Augmentation (training batches only)
+# =============================================================================
+
+def parse_transform(spec: str):
+    """'RandomAffine(0, translate=(0.1, 0.1))' -> torchvision.transforms.v2.RandomAffine(0, translate=(0.1, 0.1)).
+    Only a v2 class name with literal arguments is accepted."""
+    from torchvision.transforms import v2
+    node = ast.parse(spec.strip(), mode="eval").body
+    if isinstance(node, ast.Name):
+        name, args, kwargs = node.id, [], {}
+    elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+        name = node.func.id
+        args = [ast.literal_eval(a) for a in node.args]
+        kwargs = {k.arg: ast.literal_eval(k.value) for k in node.keywords}
+    else:
+        raise ValueError(f"Cannot parse transform {spec!r}: expected Name or Name(literal args)")
+    if not hasattr(v2, name):
+        raise ValueError(f"{name!r} is not a torchvision.transforms.v2 transform")
+    return getattr(v2, name)(*args, **kwargs)
+
+
+class BatchAugment:
+    """Applies the transform chain to every image of a uint8 batch separately
+    (separate random draw per image). uint8 [B,3,H,W] in -> uint8 [B,3,H,W] out."""
+
+    def __init__(self, specs: Sequence[str]):
+        from torchvision.transforms import v2
+        self.specs = list(specs)
+        self.chain = v2.Compose([parse_transform(s) for s in self.specs])
+
+    def __call__(self, images: torch.Tensor) -> torch.Tensor:
+        out = torch.stack([self.chain(img) for img in images])
+        if out.dtype != torch.uint8 or out.shape != images.shape:
+            raise RuntimeError(f"augmentation changed dtype/shape: {images.dtype}{tuple(images.shape)} "
+                               f"-> {out.dtype}{tuple(out.shape)}")
+        return out
+
+
+# =============================================================================
 # Loss / one epoch
 # =============================================================================
 
@@ -543,7 +600,8 @@ def forward(model, images, mean_std, n_timesteps, device, precision):
     return logits.float()
 
 
-def train_epoch(*, epoch, loader, model, optimizer, cfg, mean_std, n_timesteps, device, logger) -> Dict[str, float]:
+def train_epoch(*, epoch, loader, model, optimizer, cfg, mean_std, n_timesteps, device, logger,
+                augment: Optional[BatchAugment] = None) -> Dict[str, float]:
     model.train()
     loader.set_epoch(epoch)
     accum = max(1, int(cfg.optimization.accumulate_grad_batches))
@@ -557,6 +615,8 @@ def train_epoch(*, epoch, loader, model, optimizer, cfg, mean_std, n_timesteps, 
     for batch_idx, batch in enumerate(loader):
         images = batch["images"].to(device, non_blocking=True)
         labels = batch["labels"].to(device, non_blocking=True)
+        if augment is not None:
+            images = augment(images)
         logits = forward(model, images, mean_std, n_timesteps, device, cfg.runtime.precision)
         ce = temporal_cross_entropy(logits, labels, cfg.loss.ce_first_timestep)
         (ce / accum).backward()
@@ -582,7 +642,7 @@ def train_epoch(*, epoch, loader, model, optimizer, cfg, mean_std, n_timesteps, 
 
     return {
         "ce_loss": sum_ce / n_seen,
-        "accuracy_running": sum_correct / n_seen,   # during training (weights change within the epoch)
+        "accuracy_running": sum_correct / n_seen,   # during training (weights change within the epoch; augmented images if augmentation is on)
         "grad_norm": float(np.mean(norms)) if norms else math.nan,
         "grad_norm_max": float(np.max(norms)) if norms else math.nan,
         "clip_fraction": n_clipped / len(norms) if norms else math.nan,
@@ -721,6 +781,8 @@ def train_target(cfg: TargetConfig, *, config_path: Path, resume: bool = False) 
     train_eval_loader = ImageLoader(train_split, batch_size=bs, shuffle=False, drop_last=False, num_workers=nw)
     logger.info("train %d images (%d batches/epoch) | val %d images | test never read",
                 len(train_split), len(train_loader), len(val_split))
+    augment = BatchAugment(cfg.augmentation.transforms) if cfg.augmentation.transforms else None
+    logger.info("augmentation (training batches only): %s", augment.specs if augment else "none")
 
     # ---------------- model ----------------
     model_cls = import_object(cfg.model.model_class)
@@ -773,7 +835,8 @@ def train_target(cfg: TargetConfig, *, config_path: Path, resume: bool = False) 
                 "preprocessing": manifest.get("preprocessing"),
                 "normalize_mean": manifest["normalize_mean"],
                 "normalize_std": manifest["normalize_std"],
-                "augmentation": "none",
+                "augmentation": (list(cfg.augmentation.transforms) if cfg.augmentation.transforms else "none"),
+                "augmentation_scope": "training batches only (val, train-set evaluation and target cache: un-augmented)",
                 "split_file": str(Path(cfg.data.split_file).resolve()),
                 "split_sha256_16": file_sha256_16(Path(cfg.data.split_file)),
                 "n_train": len(train_split),
@@ -876,7 +939,8 @@ def train_target(cfg: TargetConfig, *, config_path: Path, resume: bool = False) 
         logger.info("=" * 78)
         logger.info("Epoch %d / %d", epoch + 1, epochs)
         lr = next(g["lr"] for g in optimizer.param_groups if g["name"] == "regular")   # base lr
-        train_m = train_epoch(epoch=epoch, loader=train_loader, optimizer=optimizer, logger=logger, **common)
+        train_m = train_epoch(epoch=epoch, loader=train_loader, optimizer=optimizer, logger=logger,
+                              augment=augment, **common)
         val_m = evaluate(loader=val_loader, **common)
         last_epoch = epoch == epochs - 1
         train_eval = {}

@@ -5,7 +5,8 @@
 # (1x A100 40 GB, 12 CPUs, 85 GB RAM per node).
 #
 # Usage (from DiCarlo_experiment/ on burst):
-#   sbatch round4/slurm/train_target.sbatch round4/configs/target_x8.yaml           # new run
+#   sbatch round4/slurm/train_target.sbatch round4/configs/target_x8_aug.yaml       # new run (the one used)
+#   sbatch round4/slurm/train_target.sbatch round4/configs/target_x8.yaml           # first attempt, no augmentation
 #   sbatch round4/slurm/train_target.sbatch round4/configs/target_x8.yaml resume    # continue from
 #                                                                                   # <run dir>/checkpoints/resume.pt
 # Config paths are relative to DiCarlo_experiment/.
