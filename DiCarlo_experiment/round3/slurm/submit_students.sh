@@ -2,7 +2,10 @@
 # Submit the round 3 students, then the evaluations that depend on them:
 #   - one training job per config
 #   - one evaluation job PER SEED (control + all conditions of that seed,
-#     paired), starting only if all of that seed's training jobs succeed
+#     paired), starting when all of that seed's training jobs have ENDED
+#     (afterany: burst sometimes fails a node start and requeues the job;
+#     afterok then cancels the evaluation although training succeeded on the
+#     retry. evaluate.sbatch itself refuses runs without a finished training.)
 #   - one evaluation of the controls of all seeds together (--unpaired):
 #     their CKA to each other = how similar two independently seeded
 #     students are anyway (seed-to-seed baseline)
@@ -68,13 +71,13 @@ if [ -z "${NO_EVAL:-}" ]; then
     mkdir -p "$EVAL_ROOT"
     for S in $(printf "%s\n" "${!IDS_OF_SEED[@]}" | sort -n); do
         # shellcheck disable=SC2086
-        ID=$(sbatch --parsable --dependency=afterok:"${IDS_OF_SEED[$S]}" \
+        ID=$(sbatch --parsable --dependency=afterany:"${IDS_OF_SEED[$S]}" \
              "$SLURM_DIR/evaluate.sbatch" "$EVAL_ROOT/seed$S" ${DIRS_OF_SEED[$S]})
-        echo "eval  $ID  seed $S  (after its training jobs)"
+        echo "eval  $ID  seed $S  (after its training jobs end)"
     done
     if [ "${#CONTROL_IDS[@]}" -ge 2 ]; then
         DEP=$(IFS=:; echo "${CONTROL_IDS[*]}")
-        ID=$(sbatch --parsable --dependency=afterok:"$DEP" --export=ALL,EVAL_FLAGS=--unpaired \
+        ID=$(sbatch --parsable --dependency=afterany:"$DEP" --export=ALL,EVAL_FLAGS=--unpaired \
              "$SLURM_DIR/evaluate.sbatch" "$EVAL_ROOT/controls_across_seeds" "${CONTROL_DIRS[@]}")
         echo "eval  $ID  controls across seeds (--unpaired)"
     fi
