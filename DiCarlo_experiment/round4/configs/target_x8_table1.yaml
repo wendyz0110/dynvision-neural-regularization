@@ -1,0 +1,99 @@
+# Round 4 target, third version: DyRCNNx8 with the DynVision paper's default
+# training configuration (Gutzen & Lindsay 2025, Table 1), as far as it can be
+# reproduced with round4/train_target.py. Differences from Table 1 (on purpose
+# or unavoidable) are marked [DIFF].
+#
+#   Table 1                               here
+#   20 timesteps, dt 2, tau 9            same
+#   delays: ff 0, skip 0, recurrence 6   same
+#   additive integration, Euler          same (DynVision defaults)
+#   recurrence target: output            same
+#   recurrence type: not stated          pointdepthwise [DIFF: choice; paper trained all four; = students]
+#   skip V1->V4, V2->IT                  same
+#   feedback: disabled                   same (feedback: false)
+#   normalization: none                  same
+#   weight init (trunc normal 0.004, recurrent U[-0.001, 0], bias 0)   same (DynVision constructor)
+#   200 epochs                           same
+#   Imagenette 224 px                    same images; split.json 80/20 train/val [DIFF: students' split]
+#   batch 256 x 4 accumulation = 1024    64 x 16 accumulation = 1024 (same gradient: no batch norm)
+#   lr 0.0008, recurrent lr x0.2         same
+#   CosineAnnealingLR T_max 250          same
+#   Adam, weight decay 0.0005            same (coupled L2)
+#   CE + Energy loss 0.2                 CE + activity loss 0.0002 [DIFF: Tiannan's ActivityLoss weight;
+#                                        DynVision's own ActivityLoss marks no DyRCNN module, so here
+#                                        it is computed on tstep_V1/V2/V4/IT, see train_target.py]
+#   loss reaction time 0                 ce_first_timestep 0 (CE over all 20 timesteps)
+#   bf16-mixed, grad clip norm 1.0       same
+#   augmentation: not stated             DynVision Imagenette preset (toolbox default, as Tiannan)
+#   checkpoint: not stated               best val CE (same rule as the other targets)
+
+experiment:
+  name: "target_x8_table1"
+  description: "DyRCNNx8 target, DynVision paper Table 1 training configuration (feedback off), ground-truth labels"
+
+data:
+  image_dir: "/scratch/wz2723/dynvision/cache/imagenette_images"
+  split_file: "/scratch/wz2723/dynvision/DynVision/DiCarlo_experiment/runs/alignment_run_01/data/split.json"
+  batch_size: 64                 # x 16 accumulation = 1024 (Table 1: 256 x 4)
+  shuffle_seed: 7000
+  num_workers: 8
+
+augmentation:                    # training batches only
+  transforms:
+    - "RandomRotation(10)"
+    - "RandomAffine(0, translate=(0.1, 0.1))"
+    - "RandomHorizontalFlip()"
+    - "ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2)"
+
+model:
+  model_class: "dynvision.models:DyRCNNx8"
+  kwargs:
+    n_classes: 10
+    input_dims: [1, 3, 224, 224]
+    n_timesteps: 20
+    dt: 2
+    tau: 9
+    t_feedforward: 0
+    t_recurrence: 6              # ms (3 steps)
+    t_skip: 0
+    recurrence_type: "pointdepthwise"
+    recurrence_target: "output"
+    skip: true
+    feedback: false              # Table 1: feedback connections disabled
+  init_seed: 7000
+  initialize_lazy: true
+
+loss:
+  ce_first_timestep: 0           # Table 1: loss reaction time 0
+  activity_weight: 0.0002        # Tiannan's ActivityLoss weight (Table 1: Energy loss 0.2)
+  activity_modules: ["tstep_V1", "tstep_V2", "tstep_V4", "tstep_IT"]
+  activity_ord: 1
+
+optimization:
+  epochs: 200
+  optimizer: "adam"              # coupled L2 weight decay, as DynVision
+  learning_rate: 8.0e-4
+  weight_decay: 5.0e-4
+  betas: [0.9, 0.999]
+  eps: 1.0e-8
+  lr_group_factors: {recurrence: 0.2}
+  accumulate_grad_batches: 16
+  max_grad_norm: 1.0
+  scheduler: "cosine"
+  cosine_t_max: 250
+
+runtime:
+  device: "cuda"
+  precision: "bfloat16"
+  output_dir: "/scratch/wz2723/dynvision/runs/round4/target_x8_table1"
+  log_every_n_steps: 20
+  deterministic_cudnn: false
+
+checkpoint:
+  select: "best"
+  monitor: "val_ce_loss"
+  mode: "min"
+  save_every_n_epochs: 10
+  eval_train_every_n_epochs: 10
+  eval_init: true
+  verify_reload: true

@@ -9,6 +9,8 @@ Round 4 = round 3's script plus:
     torchvision.transforms.v2 strings in DynVision's format, e.g. its
     Imagenette preset). Validation, train-set evaluation, the target cache and
     everything downstream always use the un-augmented images.
+  * optional activity loss (loss.activity_weight): DynVision's ActivityLoss
+    formula ("absolute" mode), computed with own hooks on the named modules.
   * metrics.csv has an `epochs_completed` column: 0 = initial weights,
     k = after k training epochs. Plot against this column.
   * load_trained_target(): rebuilds ANY trained target (any model class) from
@@ -138,6 +140,15 @@ class ModelConfig:
 class LossConfig:
     # CE vs ground truth, averaged over timesteps [ce_first_timestep, T).
     ce_first_timestep: int = 4
+    # Activity loss (0 = off): weight * mean over the listed modules and over
+    # all timesteps of  ||output||_ord / n_units^(1/ord)  (per image, then
+    # mean over the batch). Same formula as DynVision's ActivityLoss in
+    # "absolute" mode (losses/activity_loss.py); the hooks are our own because
+    # DynVision's DyRCNN models mark no module for it (the markings on
+    # tstep_* are commented out), so there it measures nothing.
+    activity_weight: float = 0.0
+    activity_modules: List[str] = field(default_factory=lambda: ["tstep_V1", "tstep_V2", "tstep_V4", "tstep_IT"])
+    activity_ord: int = 1
 
 
 @dataclass
@@ -233,6 +244,8 @@ def validate_config(cfg: TargetConfig) -> None:
         raise ValueError("checkpoint.select must be best or last.")
     if cfg.checkpoint.mode not in ("min", "max"):
         raise ValueError("checkpoint.mode must be min or max.")
+    if float(cfg.loss.activity_weight) < 0:
+        raise ValueError("loss.activity_weight must be >= 0.")
 
 
 # =============================================================================
@@ -577,6 +590,48 @@ class BatchAugment:
 
 
 # =============================================================================
+# Activity loss (hooks on named modules)
+# =============================================================================
+
+class ActivityMeter:
+    """
+    Forward hooks on the named modules. While `active`, every call (one per
+    module per timestep) adds ||output||_ord / n_units^(1/ord) per image
+    (with gradient). value() = mean over calls and images, then resets.
+    Equals DynVision's ActivityLoss ("absolute") for the same modules.
+    """
+
+    def __init__(self, model: torch.nn.Module, module_names: Sequence[str], ord: int = 1):
+        modules = dict(model.named_modules())
+        missing = [n for n in module_names if n not in modules]
+        if missing:
+            raise KeyError(f"loss.activity_modules not in the model: {missing}")
+        self.names, self.ord, self.active = list(module_names), int(ord), False
+        self._sum: Optional[torch.Tensor] = None
+        self._calls = 0
+        self.hooks = [modules[n].register_forward_hook(self._hook) for n in self.names]
+
+    def _hook(self, module, inputs, output):
+        if not self.active:
+            return
+        out = output[0] if isinstance(output, (tuple, list)) else output
+        flat = out.float().flatten(start_dim=1)
+        per_image = torch.linalg.vector_norm(flat, ord=self.ord, dim=1) / flat.shape[1] ** (1.0 / self.ord)
+        self._sum = per_image if self._sum is None else self._sum + per_image
+        self._calls += 1
+
+    def value(self) -> torch.Tensor:
+        if self._sum is None:
+            raise RuntimeError("ActivityMeter: no hook call recorded (wrong module names?)")
+        v = (self._sum / self._calls).mean()
+        self._sum, self._calls = None, 0
+        return v
+
+    def reset(self) -> None:
+        self._sum, self._calls = None, 0
+
+
+# =============================================================================
 # Loss / one epoch
 # =============================================================================
 
@@ -601,16 +656,20 @@ def forward(model, images, mean_std, n_timesteps, device, precision):
 
 
 def train_epoch(*, epoch, loader, model, optimizer, cfg, mean_std, n_timesteps, device, logger,
-                augment: Optional[BatchAugment] = None) -> Dict[str, float]:
+                augment: Optional[BatchAugment] = None, activity: Optional[ActivityMeter] = None) -> Dict[str, float]:
     model.train()
     loader.set_epoch(epoch)
     accum = max(1, int(cfg.optimization.accumulate_grad_batches))
     max_norm = cfg.optimization.max_grad_norm
     n_batches = len(loader)
-    sum_ce = sum_correct = n_seen = 0.0
+    sum_ce = sum_correct = n_seen = sum_act = 0.0
     norms: List[float] = []
     n_clipped = 0
     optimizer.zero_grad(set_to_none=True)
+    w_act = float(cfg.loss.activity_weight)
+    if activity is not None:
+        activity.reset()
+        activity.active = True
 
     for batch_idx, batch in enumerate(loader):
         images = batch["images"].to(device, non_blocking=True)
@@ -619,7 +678,12 @@ def train_epoch(*, epoch, loader, model, optimizer, cfg, mean_std, n_timesteps, 
             images = augment(images)
         logits = forward(model, images, mean_std, n_timesteps, device, cfg.runtime.precision)
         ce = temporal_cross_entropy(logits, labels, cfg.loss.ce_first_timestep)
-        (ce / accum).backward()
+        loss = ce
+        if activity is not None:
+            act = activity.value()
+            loss = ce + w_act * act
+            sum_act += act.item() * labels.shape[0]
+        (loss / accum).backward()
         if (batch_idx + 1) % accum == 0 or batch_idx + 1 == n_batches:
             norm = torch.nn.utils.clip_grad_norm_(
                 model.parameters(), max_norm if max_norm is not None else float("inf")).item()
@@ -636,12 +700,18 @@ def train_epoch(*, epoch, loader, model, optimizer, cfg, mean_std, n_timesteps, 
         sum_ce += ce.item() * bsz
         sum_correct += correct
         n_seen += bsz
+        if activity is not None and (batch_idx + 1) % cfg.runtime.log_every_n_steps == 0:
+            logger.info("    activity=%.4g (x weight %g = %.3g; CE %.4g)", act.item(), w_act, w_act * act.item(), ce.item())
         if (batch_idx + 1) % cfg.runtime.log_every_n_steps == 0:
             logger.info("epoch=%d batch=%d/%d | ce=%.5f acc(t=last)=%.4f | grad_norm=%.3g",
                         epoch, batch_idx + 1, n_batches, ce.item(), correct / bsz, norms[-1] if norms else math.nan)
 
+    if activity is not None:
+        activity.active = False
+        activity.reset()
     return {
         "ce_loss": sum_ce / n_seen,
+        "activity": (sum_act / n_seen) if activity is not None else math.nan,
         "accuracy_running": sum_correct / n_seen,   # during training (weights change within the epoch; augmented images if augmentation is on)
         "grad_norm": float(np.mean(norms)) if norms else math.nan,
         "grad_norm_max": float(np.max(norms)) if norms else math.nan,
@@ -790,6 +860,11 @@ def train_target(cfg: TargetConfig, *, config_path: Path, resume: bool = False) 
     disable_response_storage(model)
     model.to(device)
     n_params = int(sum(p.numel() for p in model.parameters()))
+    activity = None
+    if float(cfg.loss.activity_weight) > 0:
+        activity = ActivityMeter(model, cfg.loss.activity_modules, cfg.loss.activity_ord)
+        logger.info("activity loss: weight %g, L%d, modules %s", cfg.loss.activity_weight, cfg.loss.activity_ord,
+                    cfg.loss.activity_modules)
     optimizer, scheduler, group_sizes = build_optimizer(model, cfg.optimization)
     o = cfg.optimization
     logger.info("Model %s | %d parameters | %s lr=%g wd=%g | clip=%s | scheduler=%s (T_max=%s)",
@@ -850,7 +925,10 @@ def train_target(cfg: TargetConfig, *, config_path: Path, resume: bool = False) 
             },
             "training": {
                 "loss": f"cross-entropy vs ground truth, mean over timesteps {cfg.loss.ce_first_timestep}..{n_timesteps - 1}",
-                "extra_loss_terms": "none",
+                "extra_loss_terms": (
+                    f"activity loss: {float(cfg.loss.activity_weight):g} * mean over {list(cfg.loss.activity_modules)} "
+                    f"and timesteps of L{int(cfg.loss.activity_ord)} norm / n_units (DynVision ActivityLoss 'absolute' formula)"
+                    if float(cfg.loss.activity_weight) > 0 else "none"),
                 "epochs": int(o.epochs),
                 "optimizer": o.optimizer,
                 "learning_rate": float(o.learning_rate),
@@ -908,7 +986,7 @@ def train_target(cfg: TargetConfig, *, config_path: Path, resume: bool = False) 
         logger.info("Resumed at epoch %d (best so far: %s)", start_epoch, best)
 
     fieldnames = (["epoch", "epochs_completed", "learning_rate"]
-                  + [f"train_{k}" for k in ("ce_loss", "accuracy_running", "grad_norm", "grad_norm_max", "clip_fraction")]
+                  + [f"train_{k}" for k in ("ce_loss", "activity", "accuracy_running", "grad_norm", "grad_norm_max", "clip_fraction")]
                   + ["train_eval_ce_loss", "train_eval_accuracy"]
                   + ["val_ce_loss", "val_accuracy"] + [f"val_acc_t{t:02d}" for t in range(n_timesteps)]
                   + ["seconds"])
@@ -940,7 +1018,7 @@ def train_target(cfg: TargetConfig, *, config_path: Path, resume: bool = False) 
         logger.info("Epoch %d / %d", epoch + 1, epochs)
         lr = next(g["lr"] for g in optimizer.param_groups if g["name"] == "regular")   # base lr
         train_m = train_epoch(epoch=epoch, loader=train_loader, optimizer=optimizer, logger=logger,
-                              augment=augment, **common)
+                              augment=augment, activity=activity, **common)
         val_m = evaluate(loader=val_loader, **common)
         last_epoch = epoch == epochs - 1
         train_eval = {}

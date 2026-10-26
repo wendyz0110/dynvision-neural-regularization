@@ -14,9 +14,17 @@ Two x8 targets:
   horizontal flip, colour jitter 0.2). Validation, the target cache and the
   students use un-augmented images; the students are not augmented (their
   targets come from a cache of un-augmented images).
+- `target_x8_table1` (in preparation): DyRCNNx8 with the DynVision paper's
+  default training configuration (Table 1): feedback off, Adam lr 8e-4 wd 5e-4,
+  effective batch 1024 (64 x 16), cosine T_max 250, clip 1.0, CE over all
+  timesteps, plus an activity loss (weight 0.0002 as in Tiannan's config) and
+  the same augmentation. Differences from Table 1 are listed at the top of
+  `configs/target_x8_table1.yaml`.
 
 New in round 4 (kept for later rounds):
 - `augmentation.transforms` in the target YAML (training batches only).
+- `loss.activity_weight` / `activity_modules` / `activity_ord`: activity loss with
+  DynVision's ActivityLoss formula on the named modules (default `tstep_*`).
 - Training measures the initial weights before the first epoch, with the same
   code as every epoch. That measurement is the first row of `metrics/metrics.csv`
   (`epoch` = -1, `epochs_completed` = 0). Plot against `epochs_completed`.

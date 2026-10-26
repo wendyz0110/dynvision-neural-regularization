@@ -6,6 +6,7 @@
 #
 # Usage (from DiCarlo_experiment/ on burst):
 #   sbatch round4/slurm/train_target.sbatch round4/configs/target_x8_aug.yaml       # new run (the one used)
+#   sbatch round4/slurm/train_target.sbatch round4/configs/target_x8_table1.yaml    # DynVision paper Table 1 recipe
 #   sbatch round4/slurm/train_target.sbatch round4/configs/target_x8.yaml           # first attempt, no augmentation
 #   sbatch round4/slurm/train_target.sbatch round4/configs/target_x8.yaml resume    # continue from
 #                                                                                   # <run dir>/checkpoints/resume.pt
