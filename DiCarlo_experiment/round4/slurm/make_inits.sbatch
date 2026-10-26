@@ -6,7 +6,7 @@
 #
 # Usage (from the repo root, /scratch/wz2723/dynvision/DynVision):
 #   sbatch DiCarlo_experiment/round4/slurm/make_inits.sbatch
-#   (default: every config in round4/configs/students/; or pass configs,
+#   (default: every config in round4/configs/students_target_x8_table1/; or pass configs,
 #    relative to DiCarlo_experiment/)
 #
 #SBATCH --job-name=r4_inits
@@ -28,7 +28,7 @@ REPO=/scratch/wz2723/dynvision/DynVision
 OVERLAY=/scratch/wz2723/dynvision/overlay-15GB-500K.ext3
 SIF=/share/apps/images/cuda12.1.1-cudnn8.9.0-devel-ubuntu22.04.2.sif
 
-if [ "$#" -ge 1 ]; then CONFIGS=$(printf "'%s' " "$@"); else CONFIGS="round4/configs/students/*.yaml"; fi
+if [ "$#" -ge 1 ]; then CONFIGS=$(printf "'%s' " "$@"); else CONFIGS="round4/configs/students_target_x8_table1/*.yaml"; fi
 
 echo "job $SLURM_JOB_ID on $(hostname) | start $(date)"
 echo "git commit: $(git -C "$REPO" rev-parse HEAD)"

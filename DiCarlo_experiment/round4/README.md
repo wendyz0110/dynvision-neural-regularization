@@ -9,12 +9,12 @@ Two x8 targets:
 - `target_x8` (first attempt, no augmentation): memorized the training images
   within ~8 epochs (best val CE at epochs_completed 8, train CE ~0.001 after).
   Kept for reference, not used.
-- `target_x8_aug` (used): the same plus DynVision's Imagenette training
+- `target_x8_aug` (kept, no students for now): the same plus DynVision's Imagenette training
   augmentation on the training batches only (rotation 10 deg, translate 10%,
   horizontal flip, colour jitter 0.2). Validation, the target cache and the
   students use un-augmented images; the students are not augmented (their
   targets come from a cache of un-augmented images).
-- `target_x8_table1` (in preparation): DyRCNNx8 with the DynVision paper's
+- `target_x8_table1` (used for the students): DyRCNNx8 with the DynVision paper's
   default training configuration (Table 1): feedback off, Adam lr 8e-4 wd 5e-4,
   effective batch 1024 (64 x 16), cosine T_max 250, clip 1.0, CE over all
   timesteps, plus an activity loss (weight 0.0002 as in Tiannan's config) and
@@ -35,20 +35,27 @@ New in round 4 (kept for later rounds):
 
 ## Steps on burst (from `DiCarlo_experiment/`)
 
-1. `sbatch round4/slurm/train_target.sbatch round4/configs/target_x8_aug.yaml`
+Round 4 runs students for `target_x8_table1` only (`target_x8_aug` is kept,
+without students). Every target has its own folders:
+`configs/students_<target>/`, `runs/round4/students_<target>/`,
+`runs/round4/eval_<target>/`, `cache/targets/<target>`.
+`python round4/make_configs.py --target <target>` writes a target's 18 configs.
+
+1. `sbatch round4/slurm/train_target.sbatch round4/configs/target_x8_table1.yaml`
    - Check `s` per epoch and GPU memory in the log after the first epochs.
    - If the job hits its time limit, resubmit with `resume`.
 2. Check the target: curves, val/test accuracy, and train vs val (overfitting).
 3. `sbatch round4/slurm/prepare_target_cache.sbatch dry_run`, then
-   `sbatch round4/slurm/prepare_target_cache.sbatch full`.
+   `sbatch round4/slurm/prepare_target_cache.sbatch full`
+   (defaults: `runs/round4/target_x8_table1` -> `cache/targets/target_x8_table1`).
    - The full job writes V1/V4/IT at t19, then IT at t2/t6/t12.
    - Expected size is about 23 GB.
-4. `bash /scratch/wz2723/dynvision/DynVision/DiCarlo_experiment/round4/slurm/submit_students.sh`
+4. `bash /scratch/wz2723/dynvision/DynVision/DiCarlo_experiment/round4/slurm/submit_students.sh round4/configs/students_target_x8_table1/*.yaml`
    - Submits 18 trainings, then 3 per-seed evaluations and the controls-across-seeds evaluation.
    - The init files are round 3's (`cache/student_init/x4_seed{2723,2724,2725}.pt`).
 
 Outputs:
-- `runs/round4/target_x8_aug` (and the unused `runs/round4/target_x8`)
-- `cache/targets/target_x8_aug`
-- `runs/round4/students/<condition>_s<seed>`
-- `runs/round4/eval/`
+- `runs/round4/target_x8_table1` (also `target_x8_aug`, and the unused `target_x8`)
+- `cache/targets/target_x8_table1`
+- `runs/round4/students_target_x8_table1/<condition>_s<seed>`
+- `runs/round4/eval_target_x8_table1/`

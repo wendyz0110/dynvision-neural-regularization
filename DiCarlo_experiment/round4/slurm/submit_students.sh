@@ -11,10 +11,11 @@
 #     students are anyway (seed-to-seed baseline)
 #
 # Usage (run from anywhere, NOT with sbatch):
-#   bash /scratch/wz2723/dynvision/DynVision/DiCarlo_experiment/round4/slurm/submit_students.sh
-#        -> every config in round4/configs/students/
-#   bash .../submit_students.sh round4/configs/students/control_s2723.yaml ...   (a subset)
+#   bash .../submit_students.sh round4/configs/students_target_x8_table1/*.yaml       (all 18)
+#   bash .../submit_students.sh round4/configs/students_target_x8_table1/control_s2723.yaml ...   (a subset)
 #   NO_EVAL=1 bash .../submit_students.sh ...                                   (training only)
+# Config paths are relative to DiCarlo_experiment/. Students of target X run in
+# runs/round4/students_X/, their evaluations go to runs/round4/eval_X/.
 #
 # Before: target cache complete (incl. IT t2/t6/t12), init files made
 # (make_inits.sbatch), code committed + pushed + git pull here.
@@ -24,10 +25,14 @@ set -euo pipefail
 REPO=/scratch/wz2723/dynvision/DynVision
 EXP="$REPO/DiCarlo_experiment"
 SLURM_DIR="$EXP/round4/slurm"
-EVAL_ROOT=/scratch/wz2723/dynvision/runs/round4/eval
 
 cd "$EXP"
-if [ "$#" -ge 1 ]; then CONFIGS=("$@"); else CONFIGS=(round4/configs/students/*.yaml); fi
+if [ "$#" -lt 1 ]; then
+    echo "usage: bash submit_students.sh <config.yaml> [...]   e.g. round4/configs/students_target_x8_table1/*.yaml"
+    echo "config folders:"; ls -d round4/configs/students_* 2>/dev/null
+    exit 1
+fi
+CONFIGS=("$@")
 
 value() {  # value <key> <yaml>: first "key: value" in the file, quotes stripped
     grep -E "^[[:space:]]*$1:" "$2" | head -1 | sed -E 's/^[^:]*:[[:space:]]*"?([^"#]*)"?.*$/\1/' | xargs
@@ -43,6 +48,10 @@ for CONFIG in "${CONFIGS[@]}"; do
     [ -e "$RUN_DIR" ] && { echo "ERROR: $RUN_DIR already exists ($CONFIG)."; exit 1; }
     [ -f "$INIT" ] || { echo "ERROR: init file $INIT missing ($CONFIG). Run make_inits.sbatch first."; exit 1; }
     [ -f "$TARGET_DIR/manifest.json" ] || { echo "ERROR: target cache $TARGET_DIR missing ($CONFIG)."; exit 1; }
+    STUDENTS_DIR=$(dirname "$RUN_DIR")            # .../runs/round4/students_<target>
+    THIS_EVAL="$(dirname "$STUDENTS_DIR")/eval_$(basename "$STUDENTS_DIR" | sed 's/^students_//')"
+    if [ -z "${EVAL_ROOT:-}" ]; then EVAL_ROOT="$THIS_EVAL"; fi
+    [ "$THIS_EVAL" = "$EVAL_ROOT" ] || { echo "ERROR: configs of different targets in one call ($CONFIG)."; exit 1; }
     SEED_OF[$CONFIG]=$(value init_seed "$CONFIG")
     RUNDIR_OF[$CONFIG]=$RUN_DIR
 done
@@ -51,6 +60,7 @@ if [ -n "$(git -C "$REPO" status --porcelain --untracked-files=no)" ]; then
     git -C "$REPO" status --short --untracked-files=no
 fi
 mkdir -p /scratch/wz2723/dynvision/runs/slurm_logs
+echo "evaluations will go to: $EVAL_ROOT"
 
 # ---- training ----
 declare -A IDS_OF_SEED DIRS_OF_SEED

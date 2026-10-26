@@ -45,8 +45,8 @@
 set -euo pipefail
 
 MODE=${1:-dry_run}
-TARGET_RUN=${2:-/scratch/wz2723/dynvision/runs/round4/target_x8_aug}
-TARGET_CACHE=${3:-/scratch/wz2723/dynvision/cache/targets/target_x8_aug}
+TARGET_RUN=${2:-/scratch/wz2723/dynvision/runs/round4/target_x8_table1}
+TARGET_CACHE=${3:-/scratch/wz2723/dynvision/cache/targets/target_x8_table1}
 
 REPO=/scratch/wz2723/dynvision/DynVision
 OVERLAY=/scratch/wz2723/dynvision/overlay-15GB-500K.ext3
