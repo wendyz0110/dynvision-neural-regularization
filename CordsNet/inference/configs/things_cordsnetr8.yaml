@@ -1,0 +1,25 @@
+# Inference: frozen pretrained CordsNet-R8 (ImageNet-1k readout) on the TVSD THINGS stimuli.
+# Relative paths are resolved against the repository root (the folder that contains CordsNet/).
+
+data:
+  manifest: /scratch/wz2723/data/THINGS/things_manifest_tvsd.csv
+  splits: [train, test]        # all 22,348 TVSD stimuli, in manifest order
+  image_size: 224
+
+model:
+  checkpoint: CordsNet/checkpoints/cordsnetr8.pth
+  n_classes: 1000              # keep the original ImageNet readout
+  n_timesteps: 100             # stimulus steps (200 ms at dt = 2 ms)
+  idle_timesteps: 100          # spontaneous-activity steps before the stimulus
+  dt: 2.0
+  tau: 10.0
+  t_feedforward: 2.0
+  t_recurrence: 2.0
+  t_skip: 2.0
+
+runtime:
+  output_dir: /scratch/wz2723/cordsnet_runs/inference/things_cordsnetr8
+  batch_size: 64
+  num_workers: 8               # match --cpus-per-task in the sbatch script
+  device: cuda
+  log_every: 20                # print progress every N batches
