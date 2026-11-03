@@ -8,6 +8,10 @@ Outputs (in runtime.output_dir):
                          pred_label  (N,)      argmax ImageNet class index (0-999)
                          max_prob    (N,)      largest softmax probability
                          entropy     (N,)      softmax entropy in nats (max ln 1000 = 6.908)
+                         entropy_t   (N, T)    softmax entropy at every stimulus timestep;
+                                               column t = (t + 1) * dt ms after stimulus onset,
+                                               so entropy_t[:, -1] == entropy
+                         time_ms     (T,)      time after stimulus onset of each column
                          split, stim_idx, concept   copied from the manifest
   resolved_config.yaml the full configuration actually used (paths resolved, model settings)
   git_commit.txt       commit of the code that produced the outputs
@@ -117,6 +121,7 @@ def main():
 
     # ---- inference ----
     logits_all = np.zeros((n, n_classes), dtype=np.float32)
+    entropy_t_all = np.zeros((n, n_t), dtype=np.float32)
     seen = np.zeros(n, dtype=bool)
     t0 = time.time()
     with torch.inference_mode():
@@ -126,6 +131,9 @@ def main():
             assert out.shape[1] == n_t and out.shape[2] == n_classes, f"unexpected output {tuple(out.shape)}"
             rows = rows.numpy()
             logits_all[rows] = out[:, -1].float().cpu().numpy()
+            # entropy at every timestep, computed on the device; only (B, T) numbers are kept
+            log_p_t = torch.log_softmax(out.float(), dim=-1)
+            entropy_t_all[rows] = (-(log_p_t.exp() * log_p_t).sum(dim=-1)).cpu().numpy()
             seen[rows] = True
             if (b + 1) % rt["log_every"] == 0 or b + 1 == len(loader):
                 done = int(seen.sum())
@@ -142,13 +150,20 @@ def main():
     entropy = (-(probs * log_p).sum(dim=1)).numpy()
     max_prob, pred = probs.max(dim=1)
     max_prob, pred = max_prob.numpy(), pred.numpy()
+    assert np.allclose(entropy_t_all[:, -1], entropy, atol=1e-3), "per-timestep entropy disagrees with last-step entropy"
+    dt = model_info["model_kwargs"]["dt"]
+    time_ms = (np.arange(n_t) + 1) * dt
 
     # ---- provenance (written before outputs.npz, so outputs.npz existing means the run completed) ----
     resolved = {
         "data": {**data_cfg, "n_images": n, "limit": args.limit},
         "model": model_info,
         "runtime": {**rt, "output_dir": str(out_dir.resolve())},
-        "readout": {"timestep": "last stimulus timestep", "entropy_units": "nats"},
+        "readout": {
+            "logits": "last stimulus timestep only",
+            "entropy_t": "every stimulus timestep; column t = (t + 1) * dt ms after onset",
+            "entropy_units": "nats",
+        },
         "versions": {"torch": str(torch.__version__), "python": sys.version.split()[0]},
         "config_file": str(Path(args.config).resolve()),
     }
@@ -166,6 +181,10 @@ def main():
             "min": float(entropy.min()), "max": float(entropy.max()),
             "uniform_max_ln1000": math.log(n_classes),
         },
+        "mean_entropy_by_time_ms": {
+            f"{time_ms[i]:g}": float(entropy_t_all[:, i].mean())
+            for i in sorted({min(n_t - 1, max(0, int(round(ms / dt)) - 1)) for ms in [20, 50, 100, 140, 150, 200]})
+        },
         "max_prob": {"mean": float(max_prob.mean()), "median": float(np.median(max_prob))},
         "n_distinct_predicted_classes": int(len(set(pred.tolist()))),
         "top10_predicted_classes": [
@@ -178,6 +197,7 @@ def main():
     np.savez(
         out_dir / "outputs.npz",
         logits=logits_all, pred_label=pred, max_prob=max_prob, entropy=entropy,
+        entropy_t=entropy_t_all, time_ms=time_ms.astype(np.float32),
         split=np.array(dataset.split), stim_idx=np.array(dataset.stim_idx), concept=np.array(dataset.concept),
     )
 
