@@ -1,0 +1,481 @@
+model_card_version: 1
+name: target_r3
+description: DyRCNNx4 target, ground-truth labels, round 2 student architecture and recipe + R3 changes
+role: target (trained on ground-truth labels)
+created: '2026-10-22T22:18:54'
+status: trained
+model:
+  class: dynvision.models:DyRCNNx4
+  kwargs:
+    n_classes: 10
+    input_dims:
+    - 1
+    - 3
+    - 224
+    - 224
+    n_timesteps: 20
+    dt: 2
+    tau: 9
+    t_feedforward: 0
+    t_recurrence: 6
+    t_feedback: 12
+    t_skip: 0
+    recurrence_type: pointdepthwise
+    recurrence_target: output
+    skip: true
+    feedback: add
+  init_seed: 7000
+  lazy_adapters_initialized_with_zero_probe: true
+  effective_values:
+    bias: true
+    classifier_name: classifier
+    data_presentation_pattern: '1'
+    delay_feedforward: 0
+    delay_index_feedback: 6
+    delay_index_skip: 1
+    dt: 2.0
+    dynamics_solver: euler
+    feedback: true
+    feedback_mode: additive
+    feedforward_only: false
+    history_length: 12.0
+    idle_timesteps: 0
+    input_adaption_weight: 0.0
+    input_dims:
+    - 20
+    - 3
+    - 224
+    - 224
+    layer_names:
+    - V1
+    - V2
+    - V4
+    - IT
+    layer_operations:
+    - layer
+    - addext
+    - addskip
+    - addfeedback
+    - tstep
+    - nonlin
+    - supralin
+    - record
+    - delay
+    - pool
+    max_weight_init: 0.001
+    n_classes: 10
+    n_timesteps: 20
+    non_feedforward_operations:
+    - addfeedback
+    - addskip
+    non_input_value: 0.0
+    non_label_index: -1
+    operations_skipped_on_null_input:
+    - nonlin
+    - supralin
+    - pool
+    - norm
+    recurrence_target: output
+    recurrence_type: pointdepthwise
+    shuffle_presentation_pattern: true
+    skip: true
+    supralinearity: 1.0
+    t_feedback: 12.0
+    t_feedforward: 0.0
+    t_recurrence: 6.0
+    t_skip: 0.0
+    tau: 9.0
+    train_tau: false
+    truncated_bptt_timesteps: 0
+    use_retina: false
+  effective_values_note: every constructor argument with the value the built model holds (DynVision defaults included); DynVision's
+    own Lightning-training fields are omitted because this script does not use them
+  parameters_total: 506012
+  parameters_by_module:
+  - name: nonlin
+    class: ReLU
+    parameters: 0
+  - name: V1
+    class: RecurrentConnectedConv2d
+    parameters: 2700
+  - name: tstep_V1
+    class: EulerStep
+    parameters: 1
+  - name: pool_V1
+    class: MaxPool2d
+    parameters: 0
+  - name: V2
+    class: RecurrentConnectedConv2d
+    parameters: 25600
+  - name: tstep_V2
+    class: EulerStep
+    parameters: 1
+  - name: pool_V2
+    class: MaxPool2d
+    parameters: 0
+  - name: V4
+    class: RecurrentConnectedConv2d
+    parameters: 85789
+  - name: addskip_V4
+    class: Skip
+    parameters: 4477
+  - name: addfeedback_V1
+    class: Feedback
+    parameters: 4392
+  - name: tstep_V4
+    class: EulerStep
+    parameters: 1
+  - name: pool_V4
+    class: MaxPool2d
+    parameters: 0
+  - name: IT
+    class: RecurrentConnectedConv2d
+    parameters: 347392
+  - name: addskip_IT
+    class: Skip
+    parameters: 16640
+  - name: addfeedback_V2
+    class: Feedback
+    parameters: 16448
+  - name: tstep_IT
+    class: EulerStep
+    parameters: 1
+  - name: classifier
+    class: Sequential
+    parameters: 2570
+  state_dict_shapes:
+    tau_V1: []
+    tau_V2: []
+    tau_V4: []
+    tau_IT: []
+    n_residual_timesteps: []
+    V1.conv.weight:
+    - 36
+    - 3
+    - 3
+    - 3
+    V1.conv.bias:
+    - 36
+    V1.recurrence.pointwise_conv.weight:
+    - 36
+    - 36
+    - 1
+    - 1
+    V1.recurrence.pointwise_conv.bias:
+    - 36
+    V1.recurrence.depthwise_conv.weight:
+    - 36
+    - 1
+    - 3
+    - 3
+    V1.recurrence.depthwise_conv.bias:
+    - 36
+    tstep_V1.tau: []
+    V2.conv.weight:
+    - 64
+    - 36
+    - 3
+    - 3
+    V2.conv.bias:
+    - 64
+    V2.recurrence.pointwise_conv.weight:
+    - 64
+    - 64
+    - 1
+    - 1
+    V2.recurrence.pointwise_conv.bias:
+    - 64
+    V2.recurrence.depthwise_conv.weight:
+    - 64
+    - 1
+    - 3
+    - 3
+    V2.recurrence.depthwise_conv.bias:
+    - 64
+    tstep_V2.tau: []
+    V4.conv.weight:
+    - 121
+    - 64
+    - 3
+    - 3
+    V4.conv.bias:
+    - 121
+    V4.recurrence.pointwise_conv.weight:
+    - 121
+    - 121
+    - 1
+    - 1
+    V4.recurrence.pointwise_conv.bias:
+    - 121
+    V4.recurrence.depthwise_conv.weight:
+    - 121
+    - 1
+    - 3
+    - 3
+    V4.recurrence.depthwise_conv.bias:
+    - 121
+    addskip_V4.source.conv.weight:
+    - 36
+    - 3
+    - 3
+    - 3
+    addskip_V4.source.conv.bias:
+    - 36
+    addskip_V4.source.recurrence.pointwise_conv.weight:
+    - 36
+    - 36
+    - 1
+    - 1
+    addskip_V4.source.recurrence.pointwise_conv.bias:
+    - 36
+    addskip_V4.source.recurrence.depthwise_conv.weight:
+    - 36
+    - 1
+    - 3
+    - 3
+    addskip_V4.source.recurrence.depthwise_conv.bias:
+    - 36
+    addskip_V4.conv.weight:
+    - 121
+    - 36
+    - 1
+    - 1
+    addskip_V4.conv.bias:
+    - 121
+    addfeedback_V1.source.conv.weight:
+    - 121
+    - 64
+    - 3
+    - 3
+    addfeedback_V1.source.conv.bias:
+    - 121
+    addfeedback_V1.source.recurrence.pointwise_conv.weight:
+    - 121
+    - 121
+    - 1
+    - 1
+    addfeedback_V1.source.recurrence.pointwise_conv.bias:
+    - 121
+    addfeedback_V1.source.recurrence.depthwise_conv.weight:
+    - 121
+    - 1
+    - 3
+    - 3
+    addfeedback_V1.source.recurrence.depthwise_conv.bias:
+    - 121
+    addfeedback_V1.conv.weight:
+    - 36
+    - 121
+    - 1
+    - 1
+    addfeedback_V1.conv.bias:
+    - 36
+    tstep_V4.tau: []
+    IT.conv.weight:
+    - 256
+    - 121
+    - 3
+    - 3
+    IT.conv.bias:
+    - 256
+    IT.recurrence.pointwise_conv.weight:
+    - 256
+    - 256
+    - 1
+    - 1
+    IT.recurrence.pointwise_conv.bias:
+    - 256
+    IT.recurrence.depthwise_conv.weight:
+    - 256
+    - 1
+    - 3
+    - 3
+    IT.recurrence.depthwise_conv.bias:
+    - 256
+    addskip_IT.source.conv.weight:
+    - 64
+    - 36
+    - 3
+    - 3
+    addskip_IT.source.conv.bias:
+    - 64
+    addskip_IT.source.recurrence.pointwise_conv.weight:
+    - 64
+    - 64
+    - 1
+    - 1
+    addskip_IT.source.recurrence.pointwise_conv.bias:
+    - 64
+    addskip_IT.source.recurrence.depthwise_conv.weight:
+    - 64
+    - 1
+    - 3
+    - 3
+    addskip_IT.source.recurrence.depthwise_conv.bias:
+    - 64
+    addskip_IT.conv.weight:
+    - 256
+    - 64
+    - 1
+    - 1
+    addskip_IT.conv.bias:
+    - 256
+    addfeedback_V2.source.conv.weight:
+    - 256
+    - 121
+    - 3
+    - 3
+    addfeedback_V2.source.conv.bias:
+    - 256
+    addfeedback_V2.source.recurrence.pointwise_conv.weight:
+    - 256
+    - 256
+    - 1
+    - 1
+    addfeedback_V2.source.recurrence.pointwise_conv.bias:
+    - 256
+    addfeedback_V2.source.recurrence.depthwise_conv.weight:
+    - 256
+    - 1
+    - 3
+    - 3
+    addfeedback_V2.source.recurrence.depthwise_conv.bias:
+    - 256
+    addfeedback_V2.conv.weight:
+    - 64
+    - 256
+    - 1
+    - 1
+    addfeedback_V2.conv.bias:
+    - 64
+    tstep_IT.tau: []
+    classifier.2.weight:
+    - 10
+    - 256
+    classifier.2.bias:
+    - 10
+data:
+  image_cache: /scratch/wz2723/dynvision/cache/imagenette_images
+  image_cache_paths_sha256_16: 1d3b7e4e6d4af6b7
+  preprocessing: Resize(256) -> CenterCrop(224) -> uint8 pixels (no augmentation)
+  normalize_mean:
+  - 0.485
+  - 0.456
+  - 0.406
+  normalize_std:
+  - 0.229
+  - 0.224
+  - 0.225
+  augmentation: none
+  split_file: /scratch/wz2723/dynvision/DynVision/DiCarlo_experiment/runs/alignment_run_01/data/split.json
+  split_sha256_16: d53d3347aea6726d
+  n_train: 7575
+  n_val: 1894
+  n_test_never_used: 3925
+  labels: ground truth
+  input: same image at every timestep
+  batch_size: 32
+  shuffle_seed: 7000
+  drop_last_train_batch: true
+training:
+  loss: cross-entropy vs ground truth, mean over timesteps 4..19
+  extra_loss_terms: none
+  epochs: 200
+  optimizer: adamw
+  learning_rate: 0.000141
+  weight_decay: 0.01
+  weight_decay_type: decoupled (AdamW)
+  betas:
+  - 0.9
+  - 0.999
+  eps: 1.0e-08
+  lr_groups:
+    recurrence:
+      lr: 2.8200000000000004e-05
+      parameters: 90816
+    feedback:
+      lr: 7.05e-05
+      parameters: 20840
+    regular:
+      lr: 0.000141
+      parameters: 394356
+  gradient_accumulation: 1
+  effective_batch_size: 32
+  max_grad_norm: 500.0
+  scheduler: cosine
+  cosine_t_max_epochs: 200
+  precision: bfloat16
+  cudnn_deterministic: false
+checkpoint_selection:
+  rule: best (val_ce_loss, min)
+environment:
+  config_file: /scratch/wz2723/dynvision/DynVision/DiCarlo_experiment/round3/configs/target_r3.yaml
+  repo_commit: 7dc8aa001b63067a1919a4554d9d8adae328391f
+  dynvision_path: /scratch/wz2723/dynvision/DynVision
+  dynvision_commit: 7dc8aa001b63067a1919a4554d9d8adae328391f
+  torch: 2.5.1+cu121
+  cuda: '12.1'
+  gpu: NVIDIA A100-SXM4-40GB
+  python: 3.11.16
+  host: b-19-67
+finished: '2026-10-23T10:25:36'
+checkpoints:
+  target_checkpoint: best.pt
+  best.pt:
+    epoch: 188
+    val_ce_loss: 0.7644835531145114
+    sha256_16: 8bead32013453e53
+    val_accuracy: 0.7740232312565998
+    train_ce_loss: 0.5162374044500165
+    val_accuracy_by_timestep:
+    - 0.3659
+    - 0.6125
+    - 0.7059
+    - 0.7313
+    - 0.7434
+    - 0.7487
+    - 0.7482
+    - 0.7513
+    - 0.7571
+    - 0.7619
+    - 0.7677
+    - 0.7687
+    - 0.7719
+    - 0.7772
+    - 0.7851
+    - 0.7835
+    - 0.7851
+    - 0.7819
+    - 0.7782
+    - 0.774
+  last.pt:
+    epoch: 199
+    sha256_16: 3979d796cbf73dcc
+    val_ce_loss: 0.7653588443648349
+    val_accuracy: 0.7745512143611405
+    train_ce_loss: 0.5137272449999543
+    train_eval_accuracy: 0.8707590759075907
+    val_accuracy_by_timestep:
+    - 0.3654
+    - 0.6114
+    - 0.7049
+    - 0.735
+    - 0.7455
+    - 0.7513
+    - 0.7518
+    - 0.7529
+    - 0.7571
+    - 0.7635
+    - 0.7693
+    - 0.7682
+    - 0.7709
+    - 0.773
+    - 0.783
+    - 0.7825
+    - 0.7825
+    - 0.7809
+    - 0.7793
+    - 0.7746
+  loads_with_round2_load_target_model:
+    best.pt: true
+    last.pt: true

@@ -238,3 +238,6 @@ DiCarlo_experiment/runs/**/checkpoints/
 !DiCarlo_experiment/runs/**/*.csv
 !DiCarlo_experiment/runs/**/logs/
 !DiCarlo_experiment/runs/**/*.log
+CordsNet/cordsnet_runs/
+!CordsNet/prepare_images/*.csv
+!CordsNet/Round1/splits/*.csv
