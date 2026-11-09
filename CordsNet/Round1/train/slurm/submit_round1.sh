@@ -1,20 +1,17 @@
 #!/bin/bash
-# Submit the Round 1 student and control, each as a chain of N_JOBS jobs that resume from
-# the last finished epoch (afterany: the next job starts whether the previous one finished
-# or hit its time limit; a job whose run is already complete exits immediately).
-#   bash submit_round1.sh            # 3 jobs per run
-#   N_JOBS=2 PARTITION=h200_public bash submit_round1.sh
+# Submit the three Round 1 runs (control, student w_cka 0.1, student w_cka 1.0), one GPU job
+# each, all at the same time. fp32 with batch 64 needs ~93 GB, so they go to an H200 partition.
+# A full run (10 epochs) takes ~2 h; each job resumes from its last finished epoch, so if a
+# job is interrupted, simply run this script again (finished runs exit immediately).
+#
+#   bash submit_round1.sh                          # H200 partition h200_cds
+#   PARTITION=h200_public bash submit_round1.sh    # other H200 partition
 set -euo pipefail
 cd "$(dirname "$0")/.."
-N_JOBS=${N_JOBS:-3}
-PART=${PARTITION:+--partition=$PARTITION}
+PARTITION=${PARTITION:-h200_cds}
 
-for CONFIG in configs/student_IT_layer8_w0p1.yaml configs/control.yaml; do
+for CONFIG in configs/control.yaml configs/student_IT_layer8_w0p1.yaml configs/student_IT_layer8_w1.yaml; do
     NAME=$(basename "$CONFIG" .yaml)
-    PREV=$(sbatch --parsable $PART --job-name="r1_${NAME}" slurm/train.sbatch "$CONFIG")
-    echo "$NAME: job $PREV"
-    for i in $(seq 2 "$N_JOBS"); do
-        PREV=$(sbatch --parsable $PART --job-name="r1_${NAME}" --dependency=afterany:"$PREV" slurm/train.sbatch "$CONFIG")
-        echo "$NAME: job $PREV (after the previous one)"
-    done
+    JOB=$(sbatch --parsable --partition="$PARTITION" --job-name="r1_${NAME}" slurm/train.sbatch "$CONFIG")
+    echo "$NAME: job $JOB on $PARTITION"
 done

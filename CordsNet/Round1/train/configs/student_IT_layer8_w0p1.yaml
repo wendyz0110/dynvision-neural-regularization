@@ -26,12 +26,12 @@ loss:
   floor: 1.0e-6                # log(max(1 - CKA_S, floor))
 
 train:
-  batch_size: 32               # TO SET from memtest (one recording day per batch)
-  epochs: 10                   # TO SET after the pilot
-  lr: 3.0e-5                   # TO SET from the CE-only pilot
+  batch_size: 64               # memtest 2026-11-09: fp32 B=64 peak 92.8 GB on H200 (does not fit an 80 GB A100); same B as evaluation
+  epochs: 10                   # ~10 min per epoch on H200 + ~1 min evaluation
+  lr: 3.0e-5                   # pilot 2026-11-09 (1 epoch): 1e-4 disrupts the model early (train CE 0.9 -> 2.3, val CE worse); 1e-5 smallest CKA gain
   weight_decay: 0.01           # AdamW
   grad_clip: 1000.0            # loose; clipping is logged
-  precision: bf16              # TO CONFIRM from memtest (bf16 vs fp32 agreement)
+  precision: fp32              # bf16 changes 9.4% of last-step predictions vs fp32; saves only ~10% memory, not faster
   seed: 2723                   # same for student and control -> same batches
   log_every: 20
   max_steps: null              # per epoch; only for pilots
