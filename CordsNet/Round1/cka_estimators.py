@@ -41,9 +41,9 @@ def moments(A):
     # stimuli differ only slightly (e.g. a model layer shortly after stimulus onset).
     # So center first. rel_var = variance across stimuli / total power, ~0 when all
     # stimuli give the same pattern -> CKA undefined.
-    total = (A * A).sum()
+    total = float((A * A).sum().detach())
     A = A - A.mean(0)
-    rel_var = float((A * A).sum() / total) if total > 0 else 0.0
+    rel_var = float((A * A).sum().detach()) / total if total > 0 else 0.0
     A = A / (P * Q) ** 0.5
     K = A @ A.T
     s1, s2 = A.sum(0), (A * A).sum(0)

@@ -1,0 +1,109 @@
+{
+  "n_batches": 27,
+  "batch_size": 64,
+  "minutes": 1.07,
+  "note": "CKA_0: mean over batches; CKA_S, CKA_C: pooled H over batches; each value = mean over the 20 bins (undefined bins skipped)",
+  "mean_over_bins_by_layer": {
+    "V1 CKA_0": {
+      "layer1": 0.5376,
+      "layer2": 0.5766,
+      "layer3": 0.5844,
+      "layer4": 0.5707,
+      "layer5": 0.5616,
+      "layer6": 0.5282,
+      "layer7": 0.5127,
+      "layer8": 0.4591
+    },
+    "V1 CKA_S": {
+      "layer1": 0.0985,
+      "layer2": 0.1976,
+      "layer3": 0.1589,
+      "layer4": 0.1086,
+      "layer5": 0.0934,
+      "layer6": 0.0697,
+      "layer7": 0.0739,
+      "layer8": 0.0769
+    },
+    "V1 CKA_C": {
+      "layer1": 0.1032,
+      "layer2": 0.2077,
+      "layer3": 0.1674,
+      "layer4": 0.1149,
+      "layer5": 0.0988,
+      "layer6": 0.0731,
+      "layer7": 0.0777,
+      "layer8": 0.0801
+    },
+    "V4 CKA_0": {
+      "layer1": 0.5761,
+      "layer2": 0.6158,
+      "layer3": 0.6297,
+      "layer4": 0.6263,
+      "layer5": 0.6189,
+      "layer6": 0.5883,
+      "layer7": 0.5669,
+      "layer8": 0.5075
+    },
+    "V4 CKA_S": {
+      "layer1": 0.0542,
+      "layer2": 0.1053,
+      "layer3": 0.1017,
+      "layer4": 0.0901,
+      "layer5": 0.0911,
+      "layer6": 0.0868,
+      "layer7": 0.0898,
+      "layer8": 0.0935
+    },
+    "V4 CKA_C": {
+      "layer1": 0.0624,
+      "layer2": 0.1228,
+      "layer3": 0.1187,
+      "layer4": 0.1058,
+      "layer5": 0.1071,
+      "layer6": 0.1019,
+      "layer7": 0.1056,
+      "layer8": 0.1093
+    },
+    "IT CKA_0": {
+      "layer1": 0.4995,
+      "layer2": 0.5338,
+      "layer3": 0.545,
+      "layer4": 0.5436,
+      "layer5": 0.5373,
+      "layer6": 0.5135,
+      "layer7": 0.4935,
+      "layer8": 0.4427
+    },
+    "IT CKA_S": {
+      "layer1": 0.0223,
+      "layer2": 0.0369,
+      "layer3": 0.0432,
+      "layer4": 0.041,
+      "layer5": 0.0555,
+      "layer6": 0.0714,
+      "layer7": 0.0778,
+      "layer8": 0.0851
+    },
+    "IT CKA_C": {
+      "layer1": 0.0241,
+      "layer2": 0.04,
+      "layer3": 0.0469,
+      "layer4": 0.0446,
+      "layer5": 0.0605,
+      "layer6": 0.0776,
+      "layer7": 0.0848,
+      "layer8": 0.0922
+    }
+  },
+  "best_layer": {
+    "V1 CKA_0": "layer3",
+    "V1 CKA_S": "layer2",
+    "V1 CKA_C": "layer2",
+    "V4 CKA_0": "layer3",
+    "V4 CKA_S": "layer2",
+    "V4 CKA_C": "layer2",
+    "IT CKA_0": "layer3",
+    "IT CKA_S": "layer8",
+    "IT CKA_C": "layer8"
+  }
+}

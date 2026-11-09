@@ -1,0 +1,49 @@
+# Round 1 control: same as the student, but w_cka = 0 (CE only; CKA is still logged without gradient).
+# Relative paths are resolved against the repository root (the folder that contains CordsNet/).
+
+data:
+  cache_dir: /scratch/wz2723/data/TVSD/round1_cache_monkeyN   # prepare/build_cache.py
+
+model:
+  checkpoint: CordsNet/checkpoints/cordsnetr8.pth
+  n_classes: 1000
+  n_timesteps: 100             # stimulus steps (200 ms at dt = 2 ms) = 20 bins x 5 steps
+  idle_timesteps: 100          # run before the image, no gradient through them
+  dt: 2.0
+  tau: 10.0
+  t_feedforward: 2.0
+  t_recurrence: 2.0
+  t_skip: 2.0
+
+loss:
+  w_ce: 1.0                    # weighted-mean CE, pseudo-labels
+  ce_steps: [70, 100]          # outputs 70-99 = last 30 stimulus steps (142-200 ms), weights logspace(-3,0,30)
+  w_cka: 0.0                   # control
+  estimator: CKA_S             # Song et al. 2012
+  area: IT
+  layer: layer8
+  bins: [7, 19]                # first and last bin (inclusive): IT response window 70-200 ms
+  floor: 1.0e-6                # log(max(1 - CKA_S, floor))
+
+train:
+  batch_size: 32               # TO SET from memtest (one recording day per batch)
+  epochs: 10                   # TO SET after the pilot
+  lr: 3.0e-5                   # TO SET from the CE-only pilot
+  weight_decay: 0.01           # AdamW
+  grad_clip: 1000.0            # loose; clipping is logged
+  precision: bf16              # TO CONFIRM from memtest (bf16 vs fp32 agreement)
+  seed: 2723                   # same for student and control -> same batches
+  log_every: 20
+  max_steps: null              # per epoch; only for pilots
+
+eval:                          # identical to epoch 0
+  splits: [val]
+  batch_size: 64
+  seed: 2723
+  layers: [layer1, layer2, layer3, layer4, layer5, layer6, layer7, layer8]
+  areas: [V1, V4, IT]
+  at_start: true               # evaluate before training (should reproduce epoch 0)
+
+runtime:
+  output_dir: CordsNet/Round1/outputs/round1/control
+  device: cuda
