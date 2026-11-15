@@ -41,6 +41,7 @@ sys.path.insert(0, str(ROUND1_DIR))
 
 from common.cordsnet_model import build_cordsnet  # noqa: E402
 from core.data import Cache  # noqa: E402
+from core.recording import N_BINS, BinRecorder  # noqa: E402
 
 RUNS = ["control", "student_IT_layer8_w0p1", "student_IT_layer8_w1"]
 
@@ -84,6 +85,10 @@ def main():
     pretrained_state = {k: v.clone() for k, v in model.state_dict().items()}
     n_t = info["model_kwargs"]["n_timesteps"]
     dt = info["model_kwargs"]["dt"]
+    # Without this wrapper, DynVision in eval mode copies every layer's activity at every
+    # step to CPU memory (tens of GB per batch). The recorder (no layers) drops them, as
+    # in training and evaluation, and runs the idle steps under no_grad.
+    rec = BinRecorder(model, [], steps_per_bin=max(1, n_t // N_BINS))
 
     for run in args.runs:
         out_dir = runs_dir / run
@@ -101,6 +106,7 @@ def main():
             start = 0
             with torch.no_grad():
                 for b in batches:
+                    rec.reset()
                     x = cache.images_for(torch.as_tensor(b, device=device))
                     logits = model(x.unsqueeze(1).expand(-1, n_t, -1, -1, -1))           # (B, T, 1000)
                     top5[ei, start:start + len(b)] = logits.topk(5, dim=-1).indices.cpu().numpy()
