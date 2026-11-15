@@ -1,0 +1,33 @@
+# Epoch 0: frozen pretrained CordsNet-R8 vs monkey F neural data (CKA per layer, area and 10 ms bin).
+# Relative paths are resolved against the repository root (the folder that contains CordsNet/).
+
+data:
+  manifest: /scratch/wz2723/data/THINGS/things_manifest_tvsd.csv
+  split_csv: CordsNet/Round1/splits/monkeyF_split.csv      # same train/val/test as monkey N, F days
+  neural_dir: /scratch/wz2723/data/TVSD/monkeyF_clean     # V4 and IT files swapped back (clean_monkeyF.py)
+  monkey: monkeyF
+  image_size: 224
+
+model:
+  checkpoint: CordsNet/checkpoints/cordsnetr8.pth
+  n_classes: 1000
+  n_timesteps: 100             # stimulus steps (200 ms at dt = 2 ms) = 20 bins x 5 steps
+  idle_timesteps: 100
+  dt: 2.0
+  tau: 10.0
+  t_feedforward: 2.0
+  t_recurrence: 2.0
+  t_skip: 2.0
+
+eval:
+  splits: [val]                # images to evaluate (val = 1,854; same protocol later for students)
+  batch_size: 64               # images per CKA batch, all from one day; partial batches dropped
+  seed: 2723                   # shuffle of the images within each day
+  layers: [layer1, layer2, layer3, layer4, layer5, layer6, layer7, layer8]
+  areas: [V1, V4, IT]
+
+runtime:
+  output_dir: CordsNet/Round1/outputs/epoch0_pretrained_monkeyF
+  device: cuda
+  num_workers: 8               # match --cpus-per-task in the sbatch script
+  log_every: 5
