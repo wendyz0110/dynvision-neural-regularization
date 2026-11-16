@@ -1,0 +1,50 @@
+data:
+  manifest: /scratch/wz2723/data/THINGS/things_manifest_tvsd.csv
+  split_csv: CordsNet/Round1/splits/monkeyF_split.csv
+  neural_dir: /scratch/wz2723/data/TVSD/monkeyF_clean
+  monkey: monkeyF
+  image_size: 224
+  n_batches: 27
+  n_images: 1728
+model:
+  checkpoint_path: /scratch/wz2723/dynvision/DynVision/CordsNet/checkpoints/cordsnetr8.pth
+  checkpoint_tensors_verified: 53
+  trainable: false
+  n_classes: 1000
+  image_size: 224
+  model_kwargs:
+    n_timesteps: 100
+    idle_timesteps: 100
+    dt: 2.0
+    tau: 10.0
+    t_feedforward: 2.0
+    t_recurrence: 2.0
+    t_skip: 2.0
+eval:
+  splits:
+  - val
+  batch_size: 64
+  seed: 2723
+  layers:
+  - layer1
+  - layer2
+  - layer3
+  - layer4
+  - layer5
+  - layer6
+  - layer7
+  - layer8
+  areas:
+  - V1
+  - V4
+  - IT
+runtime:
+  output_dir: /scratch/wz2723/dynvision/DynVision/CordsNet/Round1/outputs/epoch0_pretrained_monkeyF
+  device: cuda
+  num_workers: 8
+  log_every: 5
+  max_batches: null
+versions:
+  torch: 2.5.1+cu121
+  python: 3.11.16
+config_file: /scratch/wz2723/dynvision/DynVision/CordsNet/Round1/epoch0/configs/epoch0_pretrained_monkeyF.yaml
