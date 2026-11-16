@@ -96,11 +96,11 @@ def main():
                     with torch.autocast("cuda", dtype=torch.bfloat16, enabled=(prec == "bf16")):
                         logits = model(cache.images_for(rows_t).unsqueeze(1).expand(-1, n_t, -1, -1, -1))
                     loss = weighted_ce(logits, cache.pseudo_label[rows_t], *lo["ce_steps"])
-                    for t in targets:                     # every target with gradient (worst case for memory)
-                        vals, status = cka_s_bins(rec.bins[t["layer"]], cache.neural[t["area"]][rows_t])
-                        lc = cka_loss(vals, t["bins"], lo["floor"])
+                    for tg in targets:                    # every target with gradient (worst case for memory)
+                        vals, status = cka_s_bins(rec.bins[tg["layer"]], cache.neural[tg["area"]][rows_t])
+                        lc = cka_loss(vals, tg["bins"], lo["floor"])
                         if lc is not None:
-                            loss = loss + max(t["weight"], 1.0) * lc
+                            loss = loss + max(tg["weight"], 1.0) * lc
                     opt.zero_grad(set_to_none=True)
                     loss.backward()
                     opt.step()
