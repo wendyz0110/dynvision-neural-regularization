@@ -1,7 +1,7 @@
 """
 Memory and speed test for Round 1 training: for each batch size and precision, run a few
-full training steps (forward over 100 idle + 100 stimulus steps, CE + CKA_S loss on the
-configured area/layer, backward, optimizer step) on real cached data and record the peak
+full training steps (forward over 100 idle + 100 stimulus steps, CE + CKA_S loss on every
+alignment target of the config, backward, optimizer step) on real cached data and record the peak
 GPU memory and the time per step. Also checks how much bf16 changes the model output
 (argmax agreement with fp32 on one batch).
 
@@ -26,7 +26,7 @@ sys.path.insert(0, str(ROUND1_DIR))
 
 from common.cordsnet_model import build_cordsnet  # noqa: E402
 from core.data import Cache, train_batches  # noqa: E402
-from core.losses import cka_loss, cka_s_bins, weighted_ce  # noqa: E402
+from core.losses import cka_loss, cka_s_bins, parse_targets, weighted_ce  # noqa: E402
 from core.recording import BinRecorder  # noqa: E402
 
 
@@ -47,7 +47,9 @@ def main():
     cfg = yaml.safe_load(open(args.config))
     lo, tr = cfg["loss"], cfg["train"]
     device = torch.device("cuda")
-    cache = Cache(resolve(cfg["data"]["cache_dir"]), device, areas=[lo["area"]])
+    targets = parse_targets(lo)
+    rec_layers = list(dict.fromkeys(t["layer"] for t in targets))
+    cache = Cache(resolve(cfg["data"]["cache_dir"]), device, areas=list(dict.fromkeys(t["area"] for t in targets)))
     mk = {k: v for k, v in cfg["model"].items() if k not in ("checkpoint", "n_classes")}
     model, info = build_cordsnet(resolve(cfg["model"]["checkpoint"]), trainable=True,
                                  n_classes=cfg["model"]["n_classes"], **mk)
@@ -55,8 +57,8 @@ def main():
     n_t = info["model_kwargs"]["n_timesteps"]
     params = [p for p in model.parameters() if p.requires_grad]
     opt = torch.optim.AdamW(params, lr=1e-12)          # tiny lr: the weights barely move during the test
-    loss_bins = list(range(lo["bins"][0], lo["bins"][1] + 1))
-    rec = BinRecorder(model, [lo["layer"]])
+    rec = BinRecorder(model, rec_layers, grad_bins={name: sorted({k for t in targets if t["layer"] == name for k in t["bins"]})
+                                                    for name in rec_layers})
     gpu = torch.cuda.get_device_name(0)
     results = {"gpu": gpu, "total_memory_GB": round(torch.cuda.get_device_properties(0).total_memory / 1e9, 1),
                "settings": []}
@@ -93,9 +95,12 @@ def main():
                     rec.reset()
                     with torch.autocast("cuda", dtype=torch.bfloat16, enabled=(prec == "bf16")):
                         logits = model(cache.images_for(rows_t).unsqueeze(1).expand(-1, n_t, -1, -1, -1))
-                    vals, status = cka_s_bins(rec.bins[lo["layer"]], cache.neural[lo["area"]][rows_t])
-                    lc = cka_loss(vals, loss_bins, lo["floor"])
-                    loss = weighted_ce(logits, cache.pseudo_label[rows_t]) + (lo["w_cka"] * lc if lc is not None else 0)
+                    loss = weighted_ce(logits, cache.pseudo_label[rows_t], *lo["ce_steps"])
+                    for t in targets:                     # every target with gradient (worst case for memory)
+                        vals, status = cka_s_bins(rec.bins[t["layer"]], cache.neural[t["area"]][rows_t])
+                        lc = cka_loss(vals, t["bins"], lo["floor"])
+                        if lc is not None:
+                            loss = loss + max(t["weight"], 1.0) * lc
                     opt.zero_grad(set_to_none=True)
                     loss.backward()
                     opt.step()

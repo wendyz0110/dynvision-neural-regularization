@@ -2,7 +2,8 @@
 Evaluation on fixed batches, the same protocol as epoch 0 (Round1/epoch0/run_epoch0.py):
 images of the eval split, one day per batch, batch size 64, epoch-0 shuffle seed, full
 batches only, float32, all layers x areas x 20 bins, three CKA estimators. Also the CE
-against the pseudo-labels at every stimulus step.
+against the pseudo-labels at every stimulus step, and the top-5 ImageNet classes of every
+evaluated image at every step (for accuracy: agreement with the pseudo-labels, THINGS labels).
 
 Used for epoch 0 of every training run and after every training epoch, so all numbers are
 directly comparable with Round1/outputs/epoch0_pretrained.
@@ -31,6 +32,8 @@ def evaluate(model, cache, layers, areas, splits=("val",), batch_size=64, seed=2
     cka_batch = np.full((nb, nl, na, N_BINS, 3), np.nan)
     timecourse = np.zeros((nl, N_BINS))
     ce_t = np.zeros(n_steps)
+    top5 = np.zeros((nb * batch_size, n_steps, 5), dtype=np.int16)    # (image, step, rank)
+    eval_rows = np.concatenate([rows for _, rows in batches]) if batches else np.zeros(0, dtype=int)
 
     was_training = model.training
     model.eval()
@@ -43,6 +46,7 @@ def evaluate(model, cache, layers, areas, splits=("val",), batch_size=64, seed=2
             logits = model(x.unsqueeze(1).expand(-1, n_steps, -1, -1, -1))
             rec.check_complete(n_steps)
             ce_t += ce_per_step(logits, cache.pseudo_label[rows_t]).cpu().numpy() / nb
+            top5[b * batch_size:(b + 1) * batch_size] = logits.float().topk(5, dim=-1).indices.cpu().numpy()
 
             for k in range(N_BINS):
                 hy = {}
@@ -84,6 +88,7 @@ def evaluate(model, cache, layers, areas, splits=("val",), batch_size=64, seed=2
         "h_num": h_num, "h_den_model": h_den_model, "h_den_neural": h_den_neural,
         "model_timecourse": timecourse, "batch_day": np.array([d for d, _ in batches]),
         "ce_per_step": ce_t, "ce_weighted": float((w * ce_t[ce_steps[0]:ce_steps[1]]).sum()),
+        "top5": top5, "eval_rows": eval_rows,
         "layers": np.array(layers), "areas": np.array(areas), "estimators": np.array(ESTIMATORS),
         "bin_start_ms": np.arange(N_BINS) * 10,
     }

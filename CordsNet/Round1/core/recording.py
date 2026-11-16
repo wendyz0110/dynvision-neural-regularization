@@ -21,11 +21,18 @@ class BinRecorder:
     activity of `layer` in bin k (k = 0..19, bin k = stimulus steps 5k..5k+4 = 10k..10k+10 ms)."""
 
     def __init__(self, model, layers, grad_bins=None, steps_per_bin=STEPS_PER_BIN):
-        """grad_bins: bins kept in the autograd graph (None = all); the others are stored
-        detached (for logging only), so they do not keep their part of the graph alive.
+        """grad_bins: bins kept in the autograd graph: None = all bins of all layers; a list =
+        the same bins for every layer; a dict {layer: list} = per layer (missing layer = none).
+        The other bins are stored detached (for logging only), so they do not keep their part
+        of the graph alive.
         steps_per_bin: model steps per 10 ms bin (5 at dt = 2 ms; only tests change it)."""
         self.model, self.layers, self.spb = model, list(layers), steps_per_bin
-        self.grad_bins = None if grad_bins is None else set(grad_bins)
+        if grad_bins is None:
+            self.grad_bins = None
+        elif isinstance(grad_bins, dict):
+            self.grad_bins = {name: set(grad_bins.get(name, [])) for name in self.layers}
+        else:
+            self.grad_bins = {name: set(grad_bins) for name in self.layers}
         self.original_step = model._forward
         model._forward = self._step
         self.reset()
@@ -46,7 +53,7 @@ class BinRecorder:
         k, sub = divmod(self.t, self.spb)
         for name in self.layers:
             r = resp[name]
-            if self.grad_bins is not None and k not in self.grad_bins:
+            if self.grad_bins is not None and k not in self.grad_bins[name]:
                 r = r.detach()
             self.acc[name] = r if sub == 0 else self.acc[name] + r
             if sub == self.spb - 1:

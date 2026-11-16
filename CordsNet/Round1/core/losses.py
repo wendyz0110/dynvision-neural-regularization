@@ -14,6 +14,10 @@ A bin is skipped (NaN, no gradient) when
     (e.g. a deep layer before the image information has arrived), or
   - failed: a Song denominator is <= 0 (possible estimation noise with small batches).
 CKA is computed in float64 outside autocast.
+
+Several alignment targets (Round 2): one (area, layer, bins, weight) per target,
+    loss = w_ce * CE + sum over targets of weight * L_CKA(target)
+(`parse_targets`; the Round 1 single-target config keys still work).
 """
 import torch
 import torch.nn.functional as F
@@ -76,3 +80,23 @@ def cka_loss(vals, loss_bins, floor=1e-6):
 
 def as_float(v):
     return float("nan") if v is None else float(v.detach())
+
+
+def parse_targets(loss_cfg):
+    """Alignment targets from the loss config, as a list of dicts
+    {area, layer, bins (list of bin indices), weight, tag ("<area>_<layer>")}.
+
+    Round 2 form:   targets: [{area: V1, layer: layer2, bins: [2, 19], weight: 1.0}, ...]
+    Round 1 form:   area, layer, bins, w_cka  -> one target with weight w_cka
+    bins are [first, last], inclusive.
+    """
+    raw = loss_cfg.get("targets")
+    if raw is None:
+        raw = [{"area": loss_cfg["area"], "layer": loss_cfg["layer"], "bins": loss_cfg["bins"], "weight": loss_cfg["w_cka"]}]
+    targets = []
+    for t in raw:
+        targets.append({"area": t["area"], "layer": t["layer"], "bins": list(range(t["bins"][0], t["bins"][1] + 1)),
+                        "weight": float(t["weight"]), "tag": f"{t['area']}_{t['layer']}"})
+    tags = [t["tag"] for t in targets]
+    assert len(set(tags)) == len(tags), f"duplicate alignment targets: {tags}"
+    return targets

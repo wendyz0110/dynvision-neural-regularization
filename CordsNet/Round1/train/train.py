@@ -1,8 +1,11 @@
 """
-Round 1 training: fine-tune the pretrained CordsNet-R8 with
-    loss = w_ce * CE(pseudo-labels) + w_cka * mean_k log(1 - CKA_S(layer, area, bin k))
-Student: w_cka > 0. Control: w_cka = 0 (same script, same seed -> same batches; CKA is
-still computed and logged, without gradient).
+Fine-tune the pretrained CordsNet-R8 with
+    loss = w_ce * CE(pseudo-labels) + sum over alignment targets of
+           weight * mean_k log(1 - CKA_S(layer, area, bin k))
+Round 1: one target (IT vs layer8); Round 2: several (e.g. V1-layer2, V4-layer6, IT-layer8),
+`loss.targets` in the config (core/losses.py: parse_targets; Round 1 configs still work).
+Student: weight > 0. Control: weight 0 (same script, same seed -> same batches; CKA is still
+computed and logged, without gradient).
 
 Every epoch: checkpoint, evaluation on the val split with the epoch-0 protocol (all layers x
 areas x bins, three CKA estimators, CE per step), model card update. Epoch 0 (before any
@@ -12,7 +15,9 @@ Runs resume from <output_dir>/checkpoints/last.pt automatically.
 Outputs (output_dir):
   model_card.yaml            full configuration, inputs with sha256, environment, progress
   train_metrics.csv          one row per training step
-  val_metrics.csv            one row per evaluation (epoch 0, 1, ...)
+  val_metrics.csv            one row per evaluation (epoch 0, 1, ...): CE, CKA_S per target
+                             (pooled over the target's bins), accuracy at 200 ms (agreement
+                             with the pseudo-labels, THINGS top-1 / top-5)
   eval/epoch_XXX.npz         full evaluation arrays (same keys as epoch-0 results.npz)
   checkpoints/epoch_XXX.pt   model weights after each epoch
   checkpoints/last.pt        model + optimizer + scheduler + RNG state, for resuming
@@ -46,9 +51,10 @@ sys.path.insert(0, str(CORDSNET_DIR))
 sys.path.insert(0, str(ROUND1_DIR))
 
 from common.cordsnet_model import build_cordsnet  # noqa: E402
+from core.accuracy import accuracy, load_overlap  # noqa: E402
 from core.data import Cache, train_batches  # noqa: E402
 from core.evaluate import evaluate  # noqa: E402
-from core.losses import as_float, cka_loss, cka_s_bins, weighted_ce  # noqa: E402
+from core.losses import as_float, cka_loss, cka_s_bins, parse_targets, weighted_ce  # noqa: E402
 from core.recording import N_BINS, BinRecorder  # noqa: E402
 
 
@@ -86,7 +92,7 @@ def main():
     ap.add_argument("--lr", type=float, default=None)
     ap.add_argument("--epochs", type=int, default=None)
     ap.add_argument("--batch_size", type=int, default=None)
-    ap.add_argument("--w_cka", type=float, default=None)
+    ap.add_argument("--w_cka", type=float, default=None, help="weight of every alignment target")
     ap.add_argument("--precision", choices=["fp32", "bf16"], default=None)
     ap.add_argument("--max_steps", type=int, default=None, help="stop each epoch after N steps (pilots)")
     ap.add_argument("--device", default=None)
@@ -95,10 +101,13 @@ def main():
     with open(args.config) as fh:
         cfg = yaml.safe_load(fh)
     tr, lo, ev = cfg["train"], cfg["loss"], cfg["eval"]
-    for key, sect in [("lr", tr), ("epochs", tr), ("batch_size", tr), ("w_cka", lo), ("precision", tr),
+    for key, sect in [("lr", tr), ("epochs", tr), ("batch_size", tr), ("precision", tr),
                       ("max_steps", tr), ("device", cfg["runtime"])]:
         if getattr(args, key) is not None:
             sect[key] = getattr(args, key)
+    if args.w_cka is not None:
+        for t in lo.get("targets", [lo]):
+            t["weight" if "targets" in lo else "w_cka"] = args.w_cka
     out = Path(args.output_dir).resolve() if args.output_dir else resolve(cfg["runtime"]["output_dir"])
     (out / "checkpoints").mkdir(parents=True, exist_ok=True)
     (out / "eval").mkdir(exist_ok=True)
@@ -131,9 +140,19 @@ def main():
         opt, lambda s: 0.5 * (1 + math.cos(math.pi * min(s, total_steps) / total_steps)))
     amp = dict(device_type=device.type, dtype=torch.bfloat16, enabled=(tr["precision"] == "bf16"))
 
-    area, layer = lo["area"], lo["layer"]
-    loss_bins = list(range(lo["bins"][0], lo["bins"][1] + 1))
-    li, aj = ev["layers"].index(layer), ev["areas"].index(area)
+    targets = parse_targets(lo)
+    for t in targets:
+        assert t["area"] in ev["areas"] and t["layer"] in ev["layers"], f"{t['tag']} not in eval areas / layers"
+        t["li"], t["aj"] = ev["layers"].index(t["layer"]), ev["areas"].index(t["area"])
+    single = len(targets) == 1                       # Round 1 form: also write the Round 1 column names
+    student = any(t["weight"] > 0 for t in targets)
+    rec_layers = list(dict.fromkeys(t["layer"] for t in targets))
+    grad_bins = {name: sorted({k for t in targets if t["layer"] == name and t["weight"] > 0 for k in t["bins"]})
+                 for name in rec_layers}
+    overlap_path = resolve(ev.get("overlap_csv", "CordsNet/prepare_images/things_imagenet_overlap.csv"))
+    overlap = load_overlap(overlap_path) if overlap_path.exists() else None
+    log("targets: " + ", ".join(f"{t['tag']} bins {t['bins'][0]}-{t['bins'][-1]} weight {t['weight']}" for t in targets))
+    log(f"THINGS accuracy: {overlap_path if overlap else 'overlap CSV not found, skipped'}")
 
     # ---- resume ----
     start_epoch, global_step = 1, 0
@@ -157,7 +176,8 @@ def main():
     card = yaml.safe_load(open(card_path)) if card_path.exists() else {
         "run": out.name,
         "created": datetime.now().isoformat(timespec="seconds"),
-        "description": ("student: CE + CKA_S alignment" if lo["w_cka"] > 0 else "control: CE only (CKA logged, no gradient)"),
+        "description": ("student: CE + CKA_S alignment (" + ", ".join(f"{t['tag']} x {t['weight']}" for t in targets) + ")"
+                        if student else "control: CE only (CKA logged, no gradient)"),
         "init_checkpoint": {"path": str(ckpt_path), "sha256": sha256(ckpt_path)},
         "model": model_info,
         "data": {"cache_dir": str(resolve(cfg["data"]["cache_dir"])),
@@ -165,7 +185,9 @@ def main():
                  "train_split": "train", "train_images": int((cache.split == "train").sum()),
                  "batches": "one recording day per batch; per-epoch shuffle with seed (seed, epoch); partial batches dropped",
                  "augmentation": "none (CKA needs the exact images the monkey saw; pseudo-labels come from unaugmented images)"},
-        "loss": {**lo, "ce": "weighted mean over outputs 70-99 (142-200 ms), weights logspace(-3,0,30)/sum, pseudo-labels",
+        "loss": {**lo, "targets_parsed": [{k: t[k] for k in ("area", "layer", "weight", "tag")} | {"bins": [t["bins"][0], t["bins"][-1]]}
+                                          for t in targets],
+                 "ce": "weighted mean over outputs 70-99 (142-200 ms), weights logspace(-3,0,30)/sum, pseudo-labels",
                  "cka": "mean over valid bins of log(max(1 - CKA_S, floor)); CKA_S = Song et al. 2012; "
                         "bins skipped if undefined (no variance across images) or failed (Song denominator <= 0)",
                  "activations": "DynVision `record` of the layer (post-ReLU firing rate, before pooling), mean over the 5 steps of each bin"},
@@ -192,10 +214,14 @@ def main():
             if not kept:
                 path.unlink()
     card["progress"] = [p for p in card["progress"] if p["epoch"] < start_epoch]
-    val_cols = ["epoch", "global_step", "val_ce", "CKA_0", "CKA_S", "CKA_C", "minutes"]
-    train_cols = (["epoch", "step", "global_step", "day", "lr", "loss_total", "loss_ce", "loss_cka",
-                   "n_undefined", "n_failed", "grad_norm", "clipped", "seconds"]
-                  + [f"cka_S_bin{k:02d}" for k in range(N_BINS)])
+    val_cols = (["epoch", "global_step", "val_ce"] + (["CKA_0", "CKA_S", "CKA_C"] if single else [])
+                + [f"CKA_S_{t['tag']}" for t in targets] + ["agree", "things_top1", "things_top5", "minutes"])
+    train_cols = (["epoch", "step", "global_step", "day", "lr", "loss_total", "loss_ce"]
+                  + (["loss_cka", "n_undefined", "n_failed"] if single else [])
+                  + ["grad_norm", "clipped", "seconds"]
+                  + ([f"cka_S_bin{k:02d}" for k in range(N_BINS)] if single else [])
+                  + [c for t in targets for c in [f"loss_cka_{t['tag']}", f"n_undefined_{t['tag']}", f"n_failed_{t['tag']}"]
+                                                 + [f"cka_S_{t['tag']}_bin{k:02d}" for k in range(N_BINS)]])
 
     def run_eval(epoch):
         t = time.time()
@@ -205,16 +231,22 @@ def main():
         np.savez(out / "eval" / f"epoch_{epoch:03d}.npz", **r)
         row = {"epoch": epoch, "global_step": global_step, "val_ce": round(r["ce_weighted"], 5),
                "minutes": round((time.time() - t) / 60, 2)}
-        for e, est in enumerate(["CKA_0", "CKA_S", "CKA_C"]):
-            row[est] = round(window_mean(r["cka_pooled"], li, aj, loss_bins, e), 5)
+        if single:
+            for e, est in enumerate(["CKA_0", "CKA_S", "CKA_C"]):
+                row[est] = round(window_mean(r["cka_pooled"], targets[0]["li"], targets[0]["aj"], targets[0]["bins"], e), 5)
+        for tg in targets:
+            row[f"CKA_S_{tg['tag']}"] = round(window_mean(r["cka_pooled"], tg["li"], tg["aj"], tg["bins"], 1), 5)
+        acc = accuracy(r["top5"], r["eval_rows"], cache.pseudo_label.cpu().numpy(), cache.concept, overlap)
+        row.update({k: round(acc[k], 5) for k in ("agree", "things_top1", "things_top5")})
         new = not val_path.exists()
         with open(val_path, "a", newline="") as fh:
             w = csv.DictWriter(fh, fieldnames=val_cols)
             if new:
                 w.writeheader()
             w.writerow(row)
-        log(f"epoch {epoch}: val CE {row['val_ce']:.4f}; {area}-{layer} CKA (pooled, bins "
-            f"{loss_bins[0]}-{loss_bins[-1]}): CKA_0 {row['CKA_0']:.4f}  CKA_S {row['CKA_S']:.4f}  CKA_C {row['CKA_C']:.4f}")
+        log(f"epoch {epoch}: val CE {row['val_ce']:.4f}; CKA_S (pooled over each target's bins): "
+            + "  ".join(f"{tg['tag']} {row['CKA_S_' + tg['tag']]:.4f}" for tg in targets)
+            + f"; agreement {row['agree']:.4f}, THINGS top-1 {row['things_top1']:.4f} (n = {acc['things_n']})")
         return row
 
     if start_epoch == 1 and ev.get("at_start", True) and not (out / "eval" / "epoch_000.npz").exists():
@@ -225,8 +257,8 @@ def main():
     # ---- train ----
     for epoch in range(start_epoch, tr["epochs"] + 1):
         batches = train_batches(cache, "train", B, seed, epoch)[:steps_per_epoch]
-        # only the loss bins stay in the graph (none for the control); other bins are logged only
-        rec = BinRecorder(model, [layer], grad_bins=loss_bins if lo["w_cka"] > 0 else [], steps_per_bin=spb)
+        # only each target's loss bins stay in the graph (none for weight 0); other bins are logged only
+        rec = BinRecorder(model, rec_layers, grad_bins=grad_bins, steps_per_bin=spb)
         te = time.time()
         rows_out = []
         for step, (day, rows) in enumerate(batches, start=1):
@@ -238,17 +270,20 @@ def main():
                 logits = model(x.unsqueeze(1).expand(-1, n_t, -1, -1, -1))
             rec.check_complete(n_t)
             loss_ce = weighted_ce(logits, cache.pseudo_label[rows_t], *ce_steps)
-            neural = cache.neural[area][rows_t]
-            if lo["w_cka"] > 0:
-                vals, status = cka_s_bins(rec.bins[layer], neural)
-                loss_cka = cka_loss(vals, loss_bins, lo["floor"])
-            else:
-                with torch.no_grad():
-                    vals, status = cka_s_bins([None if b is None else b.detach() for b in rec.bins[layer]], neural)
-                    loss_cka = cka_loss(vals, loss_bins, lo["floor"])
             loss = lo["w_ce"] * loss_ce
-            if lo["w_cka"] > 0 and loss_cka is not None:
-                loss = loss + lo["w_cka"] * loss_cka
+            res = {}
+            for tg in targets:
+                neural = cache.neural[tg["area"]][rows_t]
+                if tg["weight"] > 0:
+                    vals, status = cka_s_bins(rec.bins[tg["layer"]], neural)
+                    loss_cka = cka_loss(vals, tg["bins"], lo["floor"])
+                else:
+                    with torch.no_grad():
+                        vals, status = cka_s_bins([None if b is None else b.detach() for b in rec.bins[tg["layer"]]], neural)
+                        loss_cka = cka_loss(vals, tg["bins"], lo["floor"])
+                if tg["weight"] > 0 and loss_cka is not None:
+                    loss = loss + tg["weight"] * loss_cka
+                res[tg["tag"]] = (vals, status, loss_cka)
             opt.zero_grad(set_to_none=True)
             loss.backward()
             gn = float(torch.nn.utils.clip_grad_norm_(params, tr["grad_clip"]))
@@ -257,13 +292,20 @@ def main():
             sched.step()
             global_step += 1
 
-            in_loss = [status[k] for k in loss_bins]
             row = {"epoch": epoch, "step": step, "global_step": global_step, "day": day,
                    "lr": lr_used, "loss_total": loss.item(), "loss_ce": loss_ce.item(),
-                   "loss_cka": as_float(loss_cka), "n_undefined": in_loss.count("undefined"),
-                   "n_failed": in_loss.count("failed"), "grad_norm": gn, "clipped": int(gn > tr["grad_clip"]),
-                   "seconds": round(time.time() - ts, 2)}
-            row.update({f"cka_S_bin{k:02d}": as_float(v) for k, v in enumerate(vals)})
+                   "grad_norm": gn, "clipped": int(gn > tr["grad_clip"]), "seconds": round(time.time() - ts, 2)}
+            for tg in targets:
+                vals, status, loss_cka = res[tg["tag"]]
+                in_loss = [status[k] for k in tg["bins"]]
+                row.update({f"loss_cka_{tg['tag']}": as_float(loss_cka),
+                            f"n_undefined_{tg['tag']}": in_loss.count("undefined"),
+                            f"n_failed_{tg['tag']}": in_loss.count("failed")})
+                row.update({f"cka_S_{tg['tag']}_bin{k:02d}": as_float(v) for k, v in enumerate(vals)})
+                if single:
+                    row.update({"loss_cka": as_float(loss_cka), "n_undefined": in_loss.count("undefined"),
+                                "n_failed": in_loss.count("failed")})
+                    row.update({f"cka_S_bin{k:02d}": as_float(v) for k, v in enumerate(vals)})
             rows_out.append(row)
             if step % tr["log_every"] == 0 or step == len(batches):
                 new = not train_path.exists()
@@ -275,7 +317,8 @@ def main():
                 rows_out = []
                 el = time.time() - te
                 log(f"epoch {epoch} step {step}/{len(batches)}  loss {row['loss_total']:.4f}  CE {row['loss_ce']:.4f}  "
-                    f"L_CKA {row['loss_cka']:.4f}  grad {gn:.1f}  {row['seconds']:.1f}s/step  "
+                    + "  ".join(f"L_{tg['tag']} {row['loss_cka_' + tg['tag']]:.4f}" for tg in targets)
+                    + f"  grad {gn:.1f}  {row['seconds']:.1f}s/step  "
                     f"~{el / step * (len(batches) - step) / 60:.0f} min left in epoch")
         rec.detach()
         train_minutes = (time.time() - te) / 60
