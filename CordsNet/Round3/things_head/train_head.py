@@ -5,7 +5,7 @@ Only this head is trained; the CordsNet backbone and the ImageNet head are froze
 output is the fixed 512-d feature, computed once).
 
 Head: Linear(512, C) (C = non-overlapping THINGS concepts), trained as a plain Linear with
-AdamW weight decay, then converted exactly to CordsNet's weight-norm form (g = row norms,
+AdamW weight decay (on the weights only, not the bias), then converted exactly to CordsNet's weight-norm form (g = row norms,
 v = W) so it matches the ImageNet head's structure. (Weight decay on a weight-normed layer
 would act differently: decaying the direction v barely changes the function.)
 Loss: CordsNet's CE over the 30 stored steps (70-99), weights logspace(-3, 0, 30) normalized
@@ -101,7 +101,9 @@ def main():
         t0 = time.time()
         torch.manual_seed(args.seed)
         head = torch.nn.Linear(feats["train"].shape[-1], n_cls).to(device)
-        opt = torch.optim.AdamW(head.parameters(), lr=args.lr, weight_decay=wd)
+        # weight decay on the weights only, not on the bias
+        opt = torch.optim.AdamW([{"params": [head.weight], "weight_decay": wd},
+                                 {"params": [head.bias], "weight_decay": 0.0}], lr=args.lr)
         gen = torch.Generator(device="cpu").manual_seed(args.seed)               # same batches for every wd
         n = len(labels["train"])
         best_wd = None
