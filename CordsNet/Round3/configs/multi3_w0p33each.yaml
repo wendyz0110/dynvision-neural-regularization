@@ -35,7 +35,7 @@ loss:
   floor: 1.0e-6                # log(max(1 - CKA_S, floor))
 
 train:
-  batch_size: 128              # THINGS / CKA batch; to be confirmed by slurm/memtest.sbatch
+  batch_size: 64               # THINGS / CKA batch; 128 does not fit on one H200 (memtest: 64 -> 97.7 GB, 96 -> 141.7 GB)
   epochs: 20
   lr: 3.0e-5
   weight_decay: 0.01           # AdamW, all parameters
