@@ -4,7 +4,7 @@ ImageNet-val accuracy of the pretrained CordsNet-R8 and of fine-tuned models (ep
 Preprocessing as in CordsNet's own ImageNet evaluation: Resize(256) + CenterCrop(224),
 ImageNet normalization (the paper's Table 1 reports 57.90% top-1 for R8 on ImageNet val).
 Images are read with torchvision ImageFolder from the 1000 synset folders of /imagenet/val
-(imagenet-val.sqf mounted into the container, see slurm/eval_imagenet.sbatch); folder order
+(imagenet-val.sqf mounted into the container, see ../slurm/eval_imagenet.sbatch); folder order
 is checked against CordsNet's class order (prepare_images/imagenet_wnids.json).
 
 The model sees each image for 100 stimulus steps after 100 idle steps (as in training);
@@ -18,9 +18,15 @@ Output, one file per model: <out_dir>/<name>.npz
   checkpoint                  weights used ("pretrained" = cordsnetr8.pth)
 A model whose npz already exists is skipped (rerun the job to finish after a timeout).
 
-Usage (on Torch, GPU job, see slurm/eval_imagenet.sbatch):
-  python eval_imagenet.py                                      # the four Round 3 models
+Round 3 runs (two heads, lib/model.py): --round3_runs <run dirs> --epochs 5 10 15 20 evaluates
+checkpoints/epoch_XXX.pt of each run, ImageNet head only (logits 0-999); output
+<out_dir>/<run name>_epochXXX.npz.
+
+Usage (on Torch, GPU job, see ../slurm/eval_imagenet.sbatch):
+  python eval_imagenet.py                                      # pretrained + the three Round 1-2 models
   python eval_imagenet.py --models pretrained --max_batches 5  # quick check
+  python eval_imagenet.py --round3_runs CordsNet/Round3/outputs/control CordsNet/Round3/outputs/multi3_w1each \
+      CordsNet/Round3/outputs/multi3_w0p33each --epochs 5 10 15 20
 """
 import argparse
 import json
@@ -41,10 +47,12 @@ CORDSNET_DIR = ROUND3_DIR.parent
 REPO_ROOT = CORDSNET_DIR.parent
 sys.path.insert(0, str(CORDSNET_DIR))
 sys.path.insert(0, str(CORDSNET_DIR / "Round1"))
+sys.path.insert(0, str(ROUND3_DIR))
 
 from common.cordsnet_model import build_cordsnet  # noqa: E402
 from common.manifest_dataset import IMAGENET_MEAN, IMAGENET_STD  # noqa: E402
 from core.recording import N_BINS, BinRecorder  # noqa: E402
+from lib.model import IMAGENET, build_two_head_model  # noqa: E402
 
 # name -> run directory (epoch-10 checkpoint); "pretrained" = the original checkpoint
 MODELS = {
@@ -66,7 +74,9 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--imagenet_val", default="/imagenet/val")
     ap.add_argument("--models", nargs="+", default=list(MODELS))
-    ap.add_argument("--epoch", type=int, default=10)
+    ap.add_argument("--epoch", type=int, default=10, help="Round 1-2 models")
+    ap.add_argument("--round3_runs", nargs="+", default=None, help="Round 3 run directories (two-head models)")
+    ap.add_argument("--epochs", type=int, nargs="+", default=[5, 10, 15, 20], help="Round 3 checkpoints")
     ap.add_argument("--out_dir", default="CordsNet/Round3/outputs/imagenet_val")
     ap.add_argument("--wnids", default="CordsNet/prepare_images/imagenet_wnids.json")
     ap.add_argument("--batch_size", type=int, default=64)
@@ -79,12 +89,24 @@ def main():
     out_dir = resolve(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # ---- model settings: identical for every run ----
-    cfg_model = yaml.safe_load(open(resolve(REFERENCE_RUN) / "config_used.yaml"))["model"]
-    for name in args.models:
-        if MODELS[name] is not None:
-            c = yaml.safe_load(open(resolve(MODELS[name]) / "config_used.yaml"))["model"]
-            assert c == cfg_model, f"{name}: model settings differ from {REFERENCE_RUN}"
+    # ---- model settings: identical for every run; jobs = (output name, checkpoint, epoch) ----
+    round3 = args.round3_runs is not None
+    if round3:
+        runs = [resolve(r) for r in args.round3_runs]
+        cfg_model = yaml.safe_load(open(runs[0] / "config_used.yaml"))["model"]
+        jobs = []
+        for run in runs:
+            c = yaml.safe_load(open(run / "config_used.yaml"))["model"]
+            assert c == cfg_model, f"{run.name}: model settings differ from {runs[0].name}"
+            jobs += [(f"{run.name}_epoch{e:03d}", run / "checkpoints" / f"epoch_{e:03d}.pt", e) for e in args.epochs]
+    else:
+        cfg_model = yaml.safe_load(open(resolve(REFERENCE_RUN) / "config_used.yaml"))["model"]
+        for name in args.models:
+            if MODELS[name] is not None:
+                c = yaml.safe_load(open(resolve(MODELS[name]) / "config_used.yaml"))["model"]
+                assert c == cfg_model, f"{name}: model settings differ from {REFERENCE_RUN}"
+        jobs = [(name, None if MODELS[name] is None else resolve(MODELS[name]) / "checkpoints" / f"epoch_{args.epoch:03d}.pt",
+                 args.epoch) for name in args.models]
 
     # ---- data ----
     tf = v2.Compose([
@@ -106,24 +128,28 @@ def main():
 
     # ---- model (built once; weights swapped per run) ----
     ckpt_path = resolve(cfg_model["checkpoint"])
-    mk = {k: v for k, v in cfg_model.items() if k not in ("checkpoint", "n_classes")}
-    model, info = build_cordsnet(ckpt_path, trainable=False, n_classes=cfg_model["n_classes"], **mk)
+    if round3:       # two heads; the trained weights replace everything, the THINGS head file only sets the shapes
+        mk = {k: v for k, v in cfg_model.items() if k not in ("checkpoint", "things_head", "things_head_results")}
+        model, info, _ = build_two_head_model(ckpt_path, resolve(cfg_model["things_head"]),
+                                              resolve(cfg_model["things_head_results"]), trainable=False, **mk)
+    else:
+        mk = {k: v for k, v in cfg_model.items() if k not in ("checkpoint", "n_classes")}
+        model, info = build_cordsnet(ckpt_path, trainable=False, n_classes=cfg_model["n_classes"], **mk)
     model = model.to(device).eval()
     pretrained_state = {k: v.clone() for k, v in model.state_dict().items()}
     n_t, dt = info["model_kwargs"]["n_timesteps"], info["model_kwargs"]["dt"]
     # Without this wrapper DynVision copies every layer's activity at every step to CPU memory.
     rec = BinRecorder(model, [], steps_per_bin=max(1, n_t // N_BINS))
 
-    for name in args.models:
+    for name, ckpt, epoch in jobs:
         path = out_dir / f"{name}.npz"
         if path.exists():
             log(f"{name}: {path} exists, skipped")
             continue
-        if MODELS[name] is None:
+        if ckpt is None:
             model.load_state_dict(pretrained_state)
             ckpt = str(ckpt_path)
         else:
-            ckpt = resolve(MODELS[name]) / "checkpoints" / f"epoch_{args.epoch:03d}.pt"
             model.load_state_dict(torch.load(ckpt, map_location=device, weights_only=True))
             ckpt = str(ckpt)
         model.eval()
@@ -137,7 +163,7 @@ def main():
                     break
                 rec.reset()
                 x = x.to(device, non_blocking=True)
-                logits = model(x.unsqueeze(1).expand(-1, n_t, -1, -1, -1))              # (B, T, 1000)
+                logits = model(x.unsqueeze(1).expand(-1, n_t, -1, -1, -1))[..., IMAGENET]  # (B, T, 1000)
                 top5[start:start + len(x)] = logits.topk(5, dim=-1).indices.cpu().numpy()
                 start += len(x)
                 if (b + 1) % 100 == 0 or b + 1 == n_batches:
@@ -147,7 +173,7 @@ def main():
         hit1 = top5[:, :, 0] == labels[:, None]                                         # (N, T)
         hit5 = (top5 == labels[:, None, None]).any(-1)
         np.savez(path, top5=top5, label=labels, top1_t=hit1.mean(0), top5_t=hit5.mean(0),
-                 time_ms=(np.arange(n_t) + 1) * dt, checkpoint=ckpt, epoch=args.epoch,
+                 time_ms=(np.arange(n_t) + 1) * dt, checkpoint=ckpt, epoch=epoch,
                  preprocessing="Resize(256) + CenterCrop(224), ImageNet normalization")
         log(f"{name}: last-step top-1 {hit1[:, -1].mean():.4f}, top-5 {hit5[:, -1].mean():.4f} "
             f"({time.time() - t0:.0f}s) -> {path}")

@@ -35,6 +35,7 @@ class BinRecorder:
             self.grad_bins = {name: set(grad_bins) for name in self.layers}
         self.original_step = model._forward
         model._forward = self._step
+        self.enabled = True     # False: record nothing (idle steps still under no_grad); Round 3 ImageNet pass
         self.reset()
 
     def reset(self):
@@ -49,6 +50,10 @@ class BinRecorder:
             # roughly halves the peak training memory.
             with torch.no_grad():
                 return self.original_step(x, t=t, feedforward_only=feedforward_only, store_responses=False)
+        if not self.enabled:
+            self.t += 1
+            out, _ = self.original_step(x, t=t, feedforward_only=feedforward_only, store_responses=False)
+            return out, {}
         out, resp = self.original_step(x, t=t, feedforward_only=feedforward_only, store_responses=True)
         k, sub = divmod(self.t, self.spb)
         for name in self.layers:

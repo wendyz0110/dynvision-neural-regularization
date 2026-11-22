@@ -23,7 +23,9 @@ ESTIMATORS = ["CKA_0", "CKA_S", "CKA_C"]
 
 @torch.no_grad()
 def evaluate(model, cache, layers, areas, splits=("val",), batch_size=64, seed=2723, n_steps=100,
-             ce_steps=(70, 100), log=print):
+             ce_steps=(70, 100), log=print, out_slice=None):
+    """out_slice: use only these model outputs for the pseudo-label CE and the top-5 (Round 3:
+    the ImageNet head, logits 0-999, of the two-head model). None = all outputs (Rounds 1-2)."""
     batches = eval_batches(cache, splits, batch_size, seed)
     nb, nl, na = len(batches), len(layers), len(areas)
     h_num = np.full((nb, nl, na, N_BINS, 2), np.nan)
@@ -44,6 +46,8 @@ def evaluate(model, cache, layers, areas, splits=("val",), batch_size=64, seed=2
             rec.reset()
             x = cache.images_for(rows_t)
             logits = model(x.unsqueeze(1).expand(-1, n_steps, -1, -1, -1))
+            if out_slice is not None:
+                logits = logits[..., out_slice]
             rec.check_complete(n_steps)
             ce_t += ce_per_step(logits, cache.pseudo_label[rows_t]).cpu().numpy() / nb
             top5[b * batch_size:(b + 1) * batch_size] = logits.float().topk(5, dim=-1).indices.cpu().numpy()
