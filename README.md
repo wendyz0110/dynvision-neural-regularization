@@ -1,3 +1,5 @@
+This repository builds on DynVision (Gutzen & Lindsay), a toolbox developed by the Lindsay Lab. My own contributions are in CordsNet/ and [experiment folder]/, which implement CKA-based neural alignment, cached preprocessing, and multi-GPU training with DistributedDataParallel. The rest of the codebase, including the original README below, belongs to the DynVision authors.
+
 <p align="center">
   <img src="docs/assets/logo.svg" alt="DynVision Logo" width="400"/>
 </p>
