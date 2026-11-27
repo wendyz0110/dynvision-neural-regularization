@@ -1,7 +1,8 @@
 """
 Features for the new THINGS classification head: the input of CordsNet's classifier layer
 (layer7 + layer8 -> global average pool -> 512 values) of the frozen pretrained model, at
-the CE steps 70-99, for the THINGS concepts that do NOT overlap ImageNet.
+the CE steps 70-99, for the THINGS concepts that do NOT overlap ImageNet (default), or for all
+THINGS concepts with --concepts all (Round 4's THINGS head over all 1854 concepts).
 
 The new head runs parallel to the ImageNet head on this same 512-d vector, and the backbone
 stays frozen, so the features are fixed: computing them once lets the head be trained on
@@ -26,6 +27,7 @@ Output: <out_dir>/features.npz
 Usage (on Torch, GPU job, see ../slurm/things_features.sbatch):
   python extract_features.py
   python extract_features.py --max_batches 2 --out_dir CordsNet/Round3/outputs/things_head_check
+  python extract_features.py --concepts all --out_dir CordsNet/Round4/outputs/things_head     (Round 4)
 """
 import argparse
 import csv
@@ -58,6 +60,8 @@ def main():
     ap.add_argument("--cache_dir", default="/scratch/wz2723/data/TVSD/round1_cache_monkeyN")
     ap.add_argument("--checkpoint", default="CordsNet/checkpoints/cordsnetr8.pth")
     ap.add_argument("--overlap_csv", default="CordsNet/prepare_images/things_imagenet_overlap.csv")
+    ap.add_argument("--concepts", choices=["non_overlap", "all"], default="non_overlap",
+                    help="non_overlap: concepts not in ImageNet (Round 3); all: every THINGS concept (Round 4)")
     ap.add_argument("--splits", nargs="+", default=["train", "val"])
     ap.add_argument("--steps", nargs=2, type=int, default=[70, 100], help="stimulus steps [first, last)")
     ap.add_argument("--out_dir", default="CordsNet/Round3/outputs/things_head")
@@ -71,18 +75,19 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
     s0, s1 = args.steps
 
-    # ---- images of the non-overlapping concepts ----
+    # ---- images of the non-overlapping (or all) concepts ----
     cache = Cache(args.cache_dir, device, areas=())
     overlap = {r["uniqueID"] for r in csv.DictReader(open(resolve(args.overlap_csv)))}
     concepts = np.array([str(c) for c in cache.concept])
-    classes = sorted(set(concepts) - overlap)
+    excluded = overlap if args.concepts == "non_overlap" else set()
+    classes = sorted(set(concepts) - excluded)
     class_idx = {c: i for i, c in enumerate(classes)}
-    rows = np.where(np.isin(cache.split, args.splits) & ~np.isin(concepts, list(overlap)))[0]
+    rows = np.where(np.isin(cache.split, args.splits) & ~np.isin(concepts, list(excluded)))[0]
     batches = [rows[i:i + args.batch_size] for i in range(0, len(rows), args.batch_size)]
     if args.max_batches is not None:
         batches = batches[:args.max_batches]
         rows = np.concatenate(batches)
-    log(f"{len(set(concepts))} concepts, {len(overlap)} overlap ImageNet -> {len(classes)} classes; "
+    log(f"{len(set(concepts))} concepts, {len(overlap)} overlap ImageNet; --concepts {args.concepts} -> {len(classes)} classes; "
         f"{len(rows)} images ({', '.join(f'{s} {int((cache.split[rows] == s).sum())}' for s in args.splits)})")
 
     # ---- frozen pretrained model ----
@@ -132,7 +137,7 @@ def main():
              split=cache.split[rows], stim_idx=cache.stim_idx[rows], concept=concepts[rows],
              classes=np.array(classes), steps=np.arange(s0, s1),
              imagenet_W=W.cpu().numpy(), imagenet_b=b.cpu().numpy(),
-             checkpoint=str(resolve(args.checkpoint)), cache_dir=str(args.cache_dir))
+             checkpoint=str(resolve(args.checkpoint)), cache_dir=str(args.cache_dir), concepts=args.concepts)
     log(f"saved {path} ({feats.nbytes / 1e9:.2f} GB features, {time.time() - t0:.0f}s)")
 
 
