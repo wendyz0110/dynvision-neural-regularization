@@ -177,7 +177,7 @@ def main():
         model.load_state_dict(st["model"])
         opt.load_state_dict(st["optimizer"])
         sched.load_state_dict(st["scheduler"])
-        torch.set_rng_state(st["torch_rng"])
+        torch.set_rng_state(st["torch_rng"].cpu())   # map_location moved it to the GPU; the RNG state must be a CPU ByteTensor
         start_epoch, global_step = st["epoch"] + 1, st["global_step"]
         log(f"resumed from {last} (epoch {st['epoch']} done)")
         if start_epoch > tr["epochs"]:
