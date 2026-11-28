@@ -23,10 +23,13 @@ ESTIMATORS = ["CKA_0", "CKA_S", "CKA_C"]
 
 @torch.no_grad()
 def evaluate(model, cache, layers, areas, splits=("val",), batch_size=64, seed=2723, n_steps=100,
-             ce_steps=(70, 100), log=print, out_slice=None):
+             ce_steps=(70, 100), log=print, out_slice=None, batches=None):
     """out_slice: use only these model outputs for the pseudo-label CE and the top-5 (Round 3:
-    the ImageNet head, logits 0-999, of the two-head model). None = all outputs (Rounds 1-2)."""
-    batches = eval_batches(cache, splits, batch_size, seed)
+    the ImageNet head, logits 0-999, of the two-head model). None = all outputs (Rounds 1-2).
+    batches: list of (day, row_indices) to evaluate instead of eval_batches(...) (Round 4: every
+    val image, last batch of a day filled; batches may differ in size). None = Rounds 1-3 protocol."""
+    if batches is None:
+        batches = eval_batches(cache, splits, batch_size, seed)
     nb, nl, na = len(batches), len(layers), len(areas)
     h_num = np.full((nb, nl, na, N_BINS, 2), np.nan)
     h_den_model = np.full((nb, nl, N_BINS, 3), np.nan)
@@ -34,8 +37,9 @@ def evaluate(model, cache, layers, areas, splits=("val",), batch_size=64, seed=2
     cka_batch = np.full((nb, nl, na, N_BINS, 3), np.nan)
     timecourse = np.zeros((nl, N_BINS))
     ce_t = np.zeros(n_steps)
-    top5 = np.zeros((nb * batch_size, n_steps, 5), dtype=np.int16)    # (image, step, rank)
     eval_rows = np.concatenate([rows for _, rows in batches]) if batches else np.zeros(0, dtype=int)
+    top5 = np.zeros((len(eval_rows), n_steps, 5), dtype=np.int16)     # (image, step, rank), order of eval_rows
+    start = np.cumsum([0] + [len(rows) for _, rows in batches])
 
     was_training = model.training
     model.eval()
@@ -50,7 +54,7 @@ def evaluate(model, cache, layers, areas, splits=("val",), batch_size=64, seed=2
                 logits = logits[..., out_slice]
             rec.check_complete(n_steps)
             ce_t += ce_per_step(logits, cache.pseudo_label[rows_t]).cpu().numpy() / nb
-            top5[b * batch_size:(b + 1) * batch_size] = logits.float().topk(5, dim=-1).indices.cpu().numpy()
+            top5[start[b]:start[b + 1]] = logits.float().topk(5, dim=-1).indices.cpu().numpy()
 
             for k in range(N_BINS):
                 hy = {}

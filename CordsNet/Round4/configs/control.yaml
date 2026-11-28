@@ -1,0 +1,58 @@
+# Round 4 control: CE_ImageNet + CE_THINGS, no CKA gradient (CKA computed and logged).
+# The three Round 4 configs differ only in the alignment target weights.
+# Changes from Round 3: THINGS head over all 1854 concepts, batch 96, every THINGS image used every epoch.
+# Relative paths are resolved against the repository root (the folder that contains CordsNet/).
+
+data:
+  cache_dir: /scratch/wz2723/data/TVSD/round1_cache_monkeyN   # monkey N; Round 1 split
+
+imagenet:
+  train_dir: /imagenet/train   # imagenet-train.sqf mounted by slurm/train.sbatch
+  wnids_json: CordsNet/prepare_images/imagenet_wnids.json      # CordsNet's class order (checked)
+  batch_size: null             # null = same as train.batch_size (1:1 with the THINGS batch)
+  num_workers: 8
+
+model:
+  checkpoint: CordsNet/checkpoints/cordsnetr8.pth
+  things_head: CordsNet/Round4/outputs/things_head/things_head_1854.pt   # Round4/things_head/export_head.py (wd 0.1, epoch 21)
+  n_timesteps: 100             # stimulus steps (200 ms at dt = 2 ms) = 20 bins x 5 steps
+  idle_timesteps: 100          # run before the image, no gradient through them
+  dt: 2.0
+  tau: 10.0
+  t_feedforward: 2.0
+  t_recurrence: 2.0
+  t_skip: 2.0
+
+loss:
+  w_ce_imagenet: 1.0           # ImageNet train images, true labels, ImageNet head (logits 0-999)
+  w_ce_things: 1.0             # every THINGS image, true labels, THINGS head (logits 1000-2853)
+  ce_steps: [70, 100]          # outputs 70-99 = last 30 stimulus steps (142-200 ms), weights logspace(-3,0,30)
+  estimator: CKA_S             # Song et al. 2012
+  targets:                     # bins [first, last] inclusive; weight 0 = logged only
+    - {area: V1, layer: layer2, bins: [2, 19], weight: 0.0}   # 20-200 ms
+    - {area: V4, layer: layer6, bins: [5, 19], weight: 0.0}   # 50-200 ms
+    - {area: IT, layer: layer8, bins: [7, 19], weight: 0.0}   # 70-200 ms
+  floor: 1.0e-6                # log(max(1 - CKA_S, floor))
+
+train:
+  batch_size: 96               # THINGS / CKA batch (and ImageNet batch); Round 3 memtest: 96 -> 141.7 GB on an H200
+  epochs: 20
+  lr: 3.0e-5
+  weight_decay: 0.01           # AdamW, all parameters
+  grad_clip: 1000.0            # loose; clipping is logged
+  seed: 2723                   # same for every run -> same THINGS and ImageNet batches
+  log_every: 20
+  save_every: 5                # epoch_XXX.pt at epochs 5, 10, 15, 20 (last.pt every epoch)
+  max_steps: null              # per epoch; only for pilots
+
+eval:                          # batch 64 regardless of the training batch; every val image (core4/batches.py)
+  splits: [val]
+  batch_size: 64
+  seed: 2723
+  layers: [layer1, layer2, layer3, layer4, layer5, layer6, layer7, layer8]
+  areas: [V1, V4, IT]
+  at_start: true               # epoch 0: pretrained CKA; THINGS head val top-1 should be 0.630 (Round4/things_head)
+
+runtime:
+  output_dir: CordsNet/Round4/outputs/control
+  device: cuda
